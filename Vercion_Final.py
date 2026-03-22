@@ -130,6 +130,62 @@ class PrestamoColor:
         cuota=P*(r*(1+r)**n)/((1+r)**n-1)
         return round(cuota,2)
 
+        # ===== RESUMEN FINANCIERO DEL PRÉSTAMO =====
+
+    def interes_total_prestamo(self):
+
+        cuota = self.cuota_mensual()
+        total_pagado = cuota * self.meses
+        interes_total = total_pagado - self.monto_inicial
+
+        return round(interes_total,2)
+
+
+    def total_a_pagar(self):
+
+        cuota = self.cuota_mensual()
+        total = cuota * self.meses
+
+        return round(total,2)
+
+
+    def interes_restante(self):
+
+        total_interes = self.interes_total_prestamo()
+
+        capital_pagado = self.monto_inicial - self.saldo
+
+        interes_restante = total_interes - capital_pagado
+
+        if interes_restante < 0:
+            interes_restante = 0
+
+        return round(interes_restante,2)
+
+
+    def resumen_financiero(self):
+
+        cuota = self.cuota_mensual()
+        total = self.total_a_pagar()
+        interes_total = self.interes_total_prestamo()
+        interes_restante = self.interes_restante()
+
+        print(Fore.CYAN+"\n=========== RESUMEN FINANCIERO ===========")
+
+        print(Fore.GREEN+f"Monto del préstamo : ${self.monto_inicial:.2f}")
+        print(Fore.YELLOW+f"Tasa mensual       : {self.tasa_mensual*100:.2f}%")
+        print(Fore.BLUE+f"Cuota mensual      : ${cuota:.2f}")
+
+        print(Fore.MAGENTA+"\n------ Totales ------")
+
+        print(Fore.GREEN+f"Total a pagar      : ${total:.2f}")
+        print(Fore.YELLOW+f"Interés total      : ${interes_total:.2f}")
+
+        print(Fore.RED+"\n------ Estado actual ------")
+
+        print(Fore.CYAN+f"Saldo restante     : ${self.saldo:.2f}")
+        print(Fore.YELLOW+f"Interés restante   : ${interes_restante:.2f}")
+
     def generar_cuotas(self):
 
         saldo_temp=self.monto_inicial
@@ -149,6 +205,7 @@ class PrestamoColor:
 
         conn.commit()
         self.cargar_cuotas()
+
 
     def mostrar_cuotas(self):
 
@@ -361,6 +418,40 @@ class PrestamoColor:
         print(Fore.RED+f"Saldo restante: ${self.saldo:.2f}")
         print("\n"+Fore.MAGENTA+f"[{barra}] {porcentaje:.2f}%")
 
+    def mostrar_abonos(self):
+
+        if not self.abonos:
+            print(Fore.CYAN+"No hay pagos registrados")
+            return
+
+        tabla=[]
+
+        for a in self.abonos:
+
+            tipo_pago="ABONO"
+
+            for c in self.cuotas:
+                if abs(a['Monto']-c['Cuota'])<0.01 and abs(a['Interés']-c['Interés'])<0.01:
+                    tipo_pago="CUOTA"
+                    break
+
+            if tipo_pago=="CUOTA":
+                tipo=Fore.BLUE+"CUOTA"+Style.RESET_ALL
+            else:
+                tipo=Fore.GREEN+"ABONO"+Style.RESET_ALL
+
+            tabla.append([
+                a['id'],
+                tipo,
+                a['Fecha'],
+                Fore.BLUE+f"${a['Monto']:.2f}"+Style.RESET_ALL,
+                Fore.YELLOW+f"${a['Interés']:.2f}"+Style.RESET_ALL,
+                Fore.CYAN+f"${a['Capital']:.2f}"+Style.RESET_ALL,
+                Fore.RED+f"${a['Saldo']:.2f}"+Style.RESET_ALL
+            ])
+
+        print("\n"+tabulate(tabla,headers=["ID","Tipo","Fecha","Monto","Interés","Capital","Saldo"],tablefmt="fancy_grid"))
+
 
 
 def menu_principal():
@@ -402,6 +493,9 @@ def menu_principal():
         elif op=="3":
             break
 
+        else:
+            print(Fore.RED + "❌ Opción inválida.")
+
 
 def menu_prestamo(prestamo):
 
@@ -417,7 +511,8 @@ def menu_prestamo(prestamo):
         print("6 Cambiar estado cuota")
         print("7 Eliminar abono")
         print("8 Eliminar préstamo")
-        print("9 Volver")
+        print("9 Ver resumen financiero")
+        print("10 Volver")
 
         op=input("Seleccione: ")
 
@@ -443,6 +538,8 @@ def menu_prestamo(prestamo):
             prestamo.cambiar_estado_cuota(mes)
 
         elif op=="7":
+
+            prestamo.mostrar_abonos()
             abono_id=int(input("ID del abono a eliminar: "))
             prestamo.eliminar_abono(abono_id)
 
@@ -451,41 +548,13 @@ def menu_prestamo(prestamo):
             break
 
         elif op=="9":
+          prestamo.resumen_financiero()
+
+        elif op=="10":
             break
+
+        else:
+            print(Fore.RED + "❌ Opción inválida.")
 
 
 menu_principal()
-
-def mostrar_abonos(self):
-
-        if not self.abonos:
-            print(Fore.CYAN+"No hay pagos registrados")
-            return
-
-        tabla=[]
-
-        for a in self.abonos:
-
-            tipo_pago="ABONO"
-
-            for c in self.cuotas:
-                if abs(a['Monto']-c['Cuota'])<0.01 and abs(a['Interés']-c['Interés'])<0.01:
-                    tipo_pago="CUOTA"
-                    break
-
-            if tipo_pago=="CUOTA":
-                tipo=Fore.BLUE+"CUOTA"+Style.RESET_ALL
-            else:
-                tipo=Fore.GREEN+"ABONO"+Style.RESET_ALL
-
-            tabla.append([
-                a['id'],
-                tipo,
-                a['Fecha'],
-                Fore.BLUE+f"${a['Monto']:.2f}"+Style.RESET_ALL,
-                Fore.YELLOW+f"${a['Interés']:.2f}"+Style.RESET_ALL,
-                Fore.CYAN+f"${a['Capital']:.2f}"+Style.RESET_ALL,
-                Fore.RED+f"${a['Saldo']:.2f}"+Style.RESET_ALL
-            ])
-
-        print("\n"+tabulate(tabla,headers=["ID","Tipo","Fecha","Monto","Interés","Capital","Saldo"],tablefmt="fancy_grid"))
