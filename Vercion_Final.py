@@ -3,6 +3,26 @@ from datetime import datetime, timedelta
 from tabulate import tabulate
 from colorama import Fore, Style, init
 
+class CalculadoraPrestamo:
+
+    @staticmethod
+    def interes_total(monto, tasa, meses):
+        return monto * tasa * meses
+
+    @staticmethod
+    def monto_total(monto, tasa, meses):
+        interes = CalculadoraPrestamo.interes_total(monto, tasa, meses)
+        return monto + interes
+
+    @staticmethod
+    def interes_cuota(saldo, tasa):
+        return round(saldo * tasa, 2)
+
+    @staticmethod
+    def dividir_pago(cuota, interes):
+        capital = round(cuota - interes, 2)
+        return capital
+
 init(autoreset=True)
 
 # ===== Base de datos =====
@@ -60,17 +80,16 @@ class PrestamoColor:
             self.id = prestamo_id
 
             cursor.execute(
-                "SELECT monto_inicial, saldo, meses, tasa, fecha_inicio FROM prestamos WHERE id=?",
-                (prestamo_id,)
-            )
+    "SELECT monto_inicial, saldo, meses, tasa, fecha_inicio FROM prestamos WHERE id=?",
+    (prestamo_id,)
+)
 
             self.monto_inicial, self.saldo, self.meses, self.tasa_mensual, fecha = cursor.fetchone()
             self.fecha_inicio = datetime.strptime(fecha, "%Y-%m-%d")
-
         else:
 
-            self.monto_inicial = monto
-            self.saldo = monto
+            self.monto_inicial = CalculadoraPrestamo.monto_total(monto, self.tasa_mensual, meses)
+            self.saldo = self.monto_inicial
             self.meses = meses
             self.fecha_inicio = datetime.today()
 
@@ -188,24 +207,32 @@ class PrestamoColor:
 
     def generar_cuotas(self):
 
-        saldo_temp=self.monto_inicial
-        cuota=self.cuota_mensual()
+        saldo_temp = self.monto_inicial
+        cuota = self.cuota_mensual()
 
-        for i in range(1,self.meses+1):
+        for i in range(1, self.meses + 1):
 
-            interes=round(saldo_temp*self.tasa_mensual,2)
-            capital=round(cuota-interes,2)
-            saldo_temp=round(saldo_temp-capital,2)
+            interes = CalculadoraPrestamo.interes_cuota(saldo_temp, self.tasa_mensual)
+            capital = CalculadoraPrestamo.dividir_pago(cuota, interes)
 
-            cursor.execute("""
-            INSERT INTO cuotas (prestamo_id,mes,fecha,cuota,interes,capital,saldo,estado)
-            VALUES (?,?,?,?,?,?,?,?)
-            """,(self.id,i,(self.fecha_inicio+timedelta(days=30*i)).strftime('%Y-%m-%d'),
-                 cuota,interes,capital,max(saldo_temp,0),'pendiente'))
+        saldo_temp = round(saldo_temp - capital, 2)
+
+        cursor.execute("""
+        INSERT INTO cuotas (prestamo_id,mes,fecha,cuota,interes,capital,saldo,estado)
+        VALUES (?,?,?,?,?,?,?,?)
+        """,(
+            self.id,
+            i,
+            (self.fecha_inicio + timedelta(days=30*i)).strftime('%Y-%m-%d'),
+            cuota,
+            interes,
+            capital,
+            max(saldo_temp,0),
+            'pendiente'
+        ))
 
         conn.commit()
         self.cargar_cuotas()
-
 
     def mostrar_cuotas(self):
 
@@ -317,7 +344,7 @@ class PrestamoColor:
             print(Fore.RED+"Monto inválido")
             return
 
-        interes=round(self.saldo*self.tasa_mensual,2)
+        interes = CalculadoraPrestamo.interes_cuota(self.saldo, self.tasa_mensual)
 
         if monto<=interes:
             interes_pagado=monto
