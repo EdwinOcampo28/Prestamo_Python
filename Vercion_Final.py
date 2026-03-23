@@ -211,10 +211,9 @@ class PrestamoColor:
         cuota=self.cuota_mensual()
 
         for i in range(1,self.meses+1):
+            
             interes = CalculadoraPrestamo.interes_cuota(saldo_temp, self.tasa_mensual)
             capital = CalculadoraPrestamo.dividir_pago(cuota, interes)
-            interes=round(saldo_temp*self.tasa_mensual,2)
-            capital=round(cuota-interes,2)
             saldo_temp=round(saldo_temp-capital,2)
 
             cursor.execute("""
@@ -283,12 +282,33 @@ class PrestamoColor:
                 self.cargar_cuotas()
                 self.cargar_abonos()
 
-                print(Fore.GREEN+f"Cuota {mes} pagada correctamente")
+                print(Fore.GREEN+f"✔ Cuota {mes} pagada correctamente")
                 return
 
         print(Fore.RED+"Mes no encontrado")
 
     def cambiar_estado_cuota(self,mes):
+        
+        tabla=[]
+
+        for c in self.cuotas:
+
+            estado=c['Estado']
+
+            color_estado=Fore.GREEN if estado=='pagada' else Fore.RED
+            color_cuota=Fore.BLUE if estado=='pendiente' else Fore.GREEN
+
+            tabla.append([
+                c['Mes'],
+                c['Fecha'],
+                color_cuota+f"${c['Cuota']:.2f}"+Style.RESET_ALL,
+                Fore.YELLOW+f"${c['Interés']:.2f}"+Style.RESET_ALL,
+                Fore.CYAN+f"${c['Capital']:.2f}"+Style.RESET_ALL,
+                Fore.RED+f"${c['Saldo']:.2f}"+Style.RESET_ALL,
+                color_estado+estado+Style.RESET_ALL
+            ])
+
+        print("\n"+tabulate(tabla,headers=["Mes","Fecha","Cuota","Interés","Capital","Saldo","Estado"],tablefmt="fancy_grid"))
 
         for c in self.cuotas:
 
@@ -321,8 +341,8 @@ class PrestamoColor:
                     self.cargar_cuotas()
                     self.cargar_abonos()
 
-                    print(Fore.YELLOW+"Cuota cambiada a pendiente")
-
+                    print(Fore.YELLOW+f"✔ Cuota {mes} cambiada a pendiente")
+                    
                 else:
                     print(Fore.RED+"Use 'Pagar cuota' para registrar el pago")
 
@@ -359,11 +379,11 @@ class PrestamoColor:
         conn.commit()
 
         self.cargar_abonos()
-
-        print(Fore.GREEN+" 💰Abono registrado")
-        print(Fore.YELLOW+f"💰Interés pagado: ${interes_pagado:.2f}")
-        print(Fore.CYAN+f"💰Capital pagado: ${capital:.2f}")
-        print(Fore.RED+f"💰Saldo restante: ${self.saldo:.2f}")
+        
+        print(Fore.GREEN + f"✔ Abono de ${monto:.2f} registrado !")
+        print(Fore.YELLOW+f"💰 Interés pagado: ${interes_pagado:.2f}")
+        print(Fore.CYAN+f"💰 Capital pagado: ${capital:.2f}")
+        print(Fore.RED+f"💰 Saldo restante: ${self.saldo:.2f}")
 
     def eliminar_abono(self,abono_id):
 
@@ -478,11 +498,11 @@ def menu_principal():
     while True:
 
         print(Fore.CYAN+"\n=== SISTEMA DE PRÉSTAMOS ===")
-        print("1 Crear préstamo")
-        print("2 Cargar préstamo")
+        print("1 Crear Nuevo Préstamo")
+        print("2 Cargar préstamos Existentes")
         print("3 Salir")
 
-        op=input("Seleccione: ")
+        op=input("Seleccione Una Opcion: ")
 
         if op=="1":
 
@@ -502,9 +522,10 @@ def menu_principal():
                 continue
 
             for p in prestamos:
-                print(Fore.CYAN+f"ID {p[0]} | Inicial ${p[1]:.2f} | Saldo Pentiente ${p[2]:.2f}")
+                print(Fore.RED+"📋 Préstamos existentes:")
+                print(Fore.CYAN+f"ID {p[0]} | Inicial ${p[1]:.2f} | Saldo Pendiente ${p[2]:.2f}")
 
-            pid=int(input("ID préstamo: "))
+            pid=int(input("Ingrese ID préstamo: "))
             prestamo=PrestamoColor(prestamo_id=pid)
 
             menu_prestamo(prestamo)
@@ -543,7 +564,7 @@ def menu_prestamo(prestamo):
             prestamo.pagar_cuota(mes)
 
         elif op=="3":
-            monto=float(input("Monto abono: "))
+            monto=float(input(Fore.RED+"Ingrese Monto A abonar: "))
             prestamo.abonar_extra(monto)
 
         elif op=="4":
