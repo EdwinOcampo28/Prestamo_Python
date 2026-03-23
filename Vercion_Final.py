@@ -207,29 +207,21 @@ class PrestamoColor:
 
     def generar_cuotas(self):
 
-        saldo_temp = self.monto_inicial
-        cuota = self.cuota_mensual()
+        saldo_temp=self.monto_inicial
+        cuota=self.cuota_mensual()
 
-        for i in range(1, self.meses + 1):
-
+        for i in range(1,self.meses+1):
             interes = CalculadoraPrestamo.interes_cuota(saldo_temp, self.tasa_mensual)
             capital = CalculadoraPrestamo.dividir_pago(cuota, interes)
+            interes=round(saldo_temp*self.tasa_mensual,2)
+            capital=round(cuota-interes,2)
+            saldo_temp=round(saldo_temp-capital,2)
 
-        saldo_temp = round(saldo_temp - capital, 2)
-
-        cursor.execute("""
-        INSERT INTO cuotas (prestamo_id,mes,fecha,cuota,interes,capital,saldo,estado)
-        VALUES (?,?,?,?,?,?,?,?)
-        """,(
-            self.id,
-            i,
-            (self.fecha_inicio + timedelta(days=30*i)).strftime('%Y-%m-%d'),
-            cuota,
-            interes,
-            capital,
-            max(saldo_temp,0),
-            'pendiente'
-        ))
+            cursor.execute("""
+            INSERT INTO cuotas (prestamo_id,mes,fecha,cuota,interes,capital,saldo,estado)
+            VALUES (?,?,?,?,?,?,?,?)
+            """,(self.id,i,(self.fecha_inicio+timedelta(days=30*i)).strftime('%Y-%m-%d'),
+                 cuota,interes,capital,max(saldo_temp,0),'pendiente'))
 
         conn.commit()
         self.cargar_cuotas()
@@ -494,8 +486,8 @@ def menu_principal():
 
         if op=="1":
 
-            monto=float(input("Monto: "))
-            meses=int(input("Meses: "))
+            monto=float(input(Fore.CYAN+"Ingrese Monto Solicitoda: "))
+            meses=int(input(Fore.CYAN+"Ingrese Meses Deseados: "))
 
             prestamo=PrestamoColor(monto=monto,meses=meses)
             menu_prestamo(prestamo)
@@ -506,11 +498,11 @@ def menu_principal():
             prestamos=cursor.fetchall()
 
             if not prestamos:
-                print("No hay préstamos")
+                print(Fore.RED + "❌ No hay préstamos")
                 continue
 
             for p in prestamos:
-                print(f"ID {p[0]} | Inicial ${p[1]:.2f} | Saldo ${p[2]:.2f}")
+                print(Fore.CYAN+f"ID {p[0]} | Inicial ${p[1]:.2f} | Saldo Pentiente ${p[2]:.2f}")
 
             pid=int(input("ID préstamo: "))
             prestamo=PrestamoColor(prestamo_id=pid)
