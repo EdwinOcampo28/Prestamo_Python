@@ -4,6 +4,11 @@ from tabulate import tabulate
 from colorama import Fore, Style, init
 import os
 import time
+import msvcrt
+
+def pausa():
+    print(Fore.YELLOW + "\n| Presione cualquier tecla para continuar... ")
+    msvcrt.getch()
 
 def limpiar_pantalla():
     os.system("cls" if os.name == "nt" else "clear")
@@ -113,21 +118,26 @@ class PrestamoColor:
             self.id = prestamo_id
 
             cursor.execute(
-    "SELECT monto_inicial, saldo, meses, tasa, fecha_inicio FROM prestamos WHERE id=?",
-    (prestamo_id,)
-)
+                "SELECT monto_inicial, saldo, meses, tasa, fecha_inicio FROM prestamos WHERE id=?",
+                (prestamo_id,)
+            )
 
             self.monto_inicial, self.saldo, self.meses, self.tasa_mensual, fecha = cursor.fetchone()
+
+            self.monto = self.monto_inicial   # ⭐ ESTA LÍNEA ARREGLA TU ERROR
+
             self.fecha_inicio = datetime.strptime(fecha, "%Y-%m-%d")
+
         else:
 
             self.monto_inicial = CalculadoraPrestamo.monto_total(monto, self.tasa_mensual, meses)
             self.saldo = self.monto_inicial
             self.meses = meses
+            self.monto = self.monto_inicial   # ⭐ IMPORTANTE
             self.fecha_inicio = datetime.today()
 
             cursor.execute("""
-            INSERT INTO prestamos (monto_inicial, saldo, meses, tasa, fecha_inicio)
+            INSERT INTO prestamos (monto_inicial, saldo, meses, tasa, fecha_inicio
             VALUES (?,?,?,?,?)
             """,(self.monto_inicial,self.saldo,self.meses,self.tasa_mensual,self.fecha_inicio.strftime("%Y-%m-%d")))
 
@@ -413,10 +423,12 @@ class PrestamoColor:
 
         self.cargar_abonos()
         
-        print(Fore.GREEN + f"✔ Abono de ${monto:.2f} registrado !")
-        print(Fore.YELLOW+f"💰 Interés pagado: ${interes_pagado:.2f}")
-        print(Fore.CYAN+f"💰 Capital pagado: ${capital:.2f}")
-        print(Fore.RED+f"💰 Saldo restante: ${self.saldo:.2f}")
+        print(Fore.MAGENTA + "╔═══════════════════════════════════╗")
+        print(Fore.GREEN +  f"║ ✔ Abono registrado:  ${monto:.2f}".ljust(36) + "║")
+        print(Fore.YELLOW + f"║ 💰 Interés pagado:   ${interes_pagado:.2f}".ljust(35) + "║")
+        print(Fore.CYAN +   f"║ 💰 Capital pagado:   ${capital:.2f}".ljust(35) + "║")
+        print(Fore.RED +    f"║ 💰 Saldo restante:   ${self.saldo:.2f}".ljust(35) + "║")
+        print(Fore.MAGENTA + "╚═══════════════════════════════════╝")
 
     def eliminar_abono(self,abono_id):
 
@@ -587,21 +599,25 @@ def menu_principal():
             prestamos = cursor.fetchall()
 
             if not prestamos:
-                print(Fore.RED + "+--------------------------------------+")
-                print(Fore.RED + "| ❌ No hay préstamos registrados       |")
-                print(Fore.RED + "+--------------------------------------+")
+                print(Fore.RED + "+---------------------------------+")
+                print(Fore.RED + "| ❌ No hay préstamos registrados |")
+                print(Fore.RED + "+---------------------------------+")
                 input(Fore.YELLOW + "| Presione Enter para continuar... ")
                 continue
 
-            print(Fore.YELLOW + "+--------------------------------------+")
-            print(Fore.YELLOW + "|        PRÉSTAMOS EXISTENTES          |")
-            print(Fore.YELLOW + "+--------------------------------------+")
+            print(Fore.RED + "+-----------------------------------+")
+            print(Fore.CYAN + "|       PRÉSTAMOS EXISTENTES        |")
+            print(Fore.RED + "+-----------------------------------+")
+
+            print(Fore.YELLOW + "+====+===============+==============+")
+            print(Fore.GREEN + "| ID | MONTO INICIAL | SALDO ACTUAL |")
+            print(Fore.YELLOW + "+====+===============+==============+")
 
             for p in prestamos:
-                print(Fore.RED + "+-----------------------------------------------+")
-                print(Fore.CYAN + f"| ID {p[0]} | Inicial ${p[1]:.2f} | Saldo ${p[2]:.2f}|")
-
-            print(Fore.YELLOW + "+-----------------------------------------------+")
+                print(
+            Fore.CYAN +
+            f"| {p[0]:<3}| ${p[1]:<12.2f} | ${p[2]:<12.2f}|"
+            )
 
             while True:
                 try:
@@ -609,17 +625,17 @@ def menu_principal():
                     print(Fore.YELLOW + "+--------------------------+")
                     break
                 except ValueError:
-                    print(Fore.RED + "+--------------------------------------+")
-                    print(Fore.RED + "| ❌ Debe ingresar un número           |")
-                    print(Fore.RED + "+--------------------------------------+")
+                    print(Fore.RED + "+-----------------------------------+")
+                    print(Fore.RED + "|     ❌ Debe ingresar un número    |")
+                    print(Fore.RED + "+-----------------------------------+")
 
             cursor.execute("SELECT id FROM prestamos WHERE id=?", (pid,))
             existe = cursor.fetchone()
 
             if not existe:
-                print(Fore.RED + "+--------------------------------------+")
-                print(Fore.RED + "| ❌ Ese préstamo no existe            |")
-                print(Fore.RED + "+--------------------------------------+")
+                print(Fore.RED + "+---------------------------+")
+                print(Fore.RED + "| ❌ Ese préstamo no existe |")
+                print(Fore.RED + "+---------------------------+")
                 input(Fore.YELLOW + "| Presione Enter para continuar... ")
                 continue
 
@@ -628,9 +644,9 @@ def menu_principal():
 
         elif op == "3":
 
-            print(Fore.GREEN + "+--------------------------------------+")
-            print(Fore.GREEN + "|     Gracias por usar el sistema      |")
-            print(Fore.GREEN + "+--------------------------------------+")
+            print(Fore.GREEN + "+-----------------------------------+")
+            print(Fore.GREEN + "|    Gracias por usar el sistema    |")
+            print(Fore.GREEN + "+-----------------------------------+")
             break
 
         else:
@@ -645,8 +661,10 @@ def menu_prestamo(prestamo):
 
     while True:
 
+        limpiar_pantalla()
+
         print(Fore.CYAN + "\n+---------------------------+")
-        print(Fore.CYAN + "|          MENÚ PRÉSTAMO    |")
+        print(Fore.CYAN + "|       MENÚ PRÉSTAMO       |")
         print(Fore.CYAN + "+----+----------------------+")
         print(Fore.GREEN + "| 1  | Ver cuotas           |")
         print(Fore.CYAN + "+----+----------------------+")
@@ -671,45 +689,132 @@ def menu_prestamo(prestamo):
 
         op = input(Fore.YELLOW + "| Seleccione una opción: ")
 
-        if op=="1":
+        # VER CUOTAS
+        if op == "1":
+
+            limpiar_pantalla()
+            prestamo.mostrar_cuotas()
+            pausa()
+
+       # PAGAR CUOTA
+        elif op == "2":
+
+            limpiar_pantalla()
+
+            print(Fore.CYAN + "+-------------------------+")
+            print(Fore.CYAN + "|        PAGAR CUOTA      |")
+            print(Fore.CYAN + "+-------------------------+")
+
             prestamo.mostrar_cuotas()
 
-        elif op=="2":
-            mes=int(input("Número de cuota: "))
-            prestamo.pagar_cuota(mes)
+            try:
+                mes = int(input(Fore.GREEN + "\n| Número de cuota a pagar: "))
+                prestamo.pagar_cuota(mes)
+            except:
+                print(Fore.RED + "❌ Entrada inválida")
 
-        elif op=="3":
-            monto=float(input(Fore.RED+"Ingrese Monto A abonar: "))
-            prestamo.abonar_extra(monto)
+            pausa()
+        # ABONO EXTRA
+        elif op == "3":
 
-        elif op=="4":
+            limpiar_pantalla()
+
+            print(Fore.CYAN + "+-----------------------+")
+            print(Fore.CYAN + "|      ABONO EXTRA      |")
+            print(Fore.CYAN + "+-----------------------+")
+
+            try:
+                print(Fore.GREEN + "+=======================+")
+                monto = float(input(Fore.YELLOW + "| Monto a abonar: "))
+                print(Fore.GREEN + "+=======================+")
+                prestamo.abonar_extra(monto)
+            except:
+                print(Fore.RED + "❌ Entrada inválida")
+
+            pausa()
+
+        # HISTORIAL
+        elif op == "4":
+
+            limpiar_pantalla()
             prestamo.mostrar_abonos()
+            pausa()
 
-        elif op=="5":
+        # PROGRESO
+        elif op == "5":
+
+            limpiar_pantalla()
             prestamo.barra_progreso()
+            pausa()
 
-        elif op=="6":
-            mes=int(input("Número de cuota: "))
-            prestamo.cambiar_estado_cuota(mes)
+        # CAMBIAR ESTADO
+        elif op == "6":
 
-        elif op=="7":
+            limpiar_pantalla()
+
+            print(Fore.CYAN + "+--------------------------+")
+            print(Fore.CYAN + "|   CAMBIAR ESTADO CUOTA   |")
+            print(Fore.CYAN + "+--------------------------+")
+
+            try:
+                mes = int(input(Fore.YELLOW + "| Número de cuota: "))
+                prestamo.cambiar_estado_cuota(mes)
+            except:
+                print(Fore.RED + "❌ Entrada inválida")
+
+            pausa()
+
+        # ELIMINAR ABONO
+        elif op == "7":
+
+            limpiar_pantalla()
 
             prestamo.mostrar_abonos()
-            abono_id=int(input("ID del abono a eliminar: "))
-            prestamo.eliminar_abono(abono_id)
 
-        elif op=="8":
-          prestamo.resumen_financiero()
+            print(Fore.CYAN + "\n+------------------------+")
+            print(Fore.CYAN + "|     ELIMINAR ABONO     |")
+            print(Fore.CYAN + "+------------------------+")
 
-        elif op=="9":
-            prestamo.eliminar_prestamo()
-            break
+            try:
+                abono_id = int(input(Fore.YELLOW + "| ID del abono: "))
+                prestamo.eliminar_abono(abono_id)
+            except:
+                print(Fore.RED + "❌ Entrada inválida")
 
-        elif op=="10":
+            pausa()
+
+        # RESUMEN
+        elif op == "8":
+
+            limpiar_pantalla()
+            prestamo.resumen_financiero()
+            pausa()
+
+        # ELIMINAR PRESTAMO
+        elif op == "9":
+
+            limpiar_pantalla()
+
+            print(Fore.RED + "+------------------------+")
+            print(Fore.RED + "|   ELIMINAR PRÉSTAMO    |")
+            print(Fore.RED + "+------------------------+")
+
+            confirm = input(Fore.YELLOW + "| ¿Seguro? (s/n): ")
+
+            if confirm.lower() == "s":
+                prestamo.eliminar_prestamo()
+                pausa()
+                break
+
+        # VOLVER
+        elif op == "10":
             break
 
         else:
-            print(Fore.RED + "❌ Opción inválida.")
+            print(Fore.RED + "+---------------------------+")
+            print(Fore.RED + "|    ❌ Opción inválida     |")
+            print(Fore.RED + "+---------------------------+")
+            pausa()
 
 
 pantalla_inicio()
