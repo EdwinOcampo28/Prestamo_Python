@@ -19,9 +19,9 @@ def pantalla_inicio():
     limpiar_pantalla()
 
     print(Fore.CYAN + """
-================================
-      SISTEMA DE PRÉSTAMOS
-================================
+╔══════════════════════╗
+║ SISTEMA DE PRÉSTAMOS ║
+╚══════════════════════╝
 """)
 
     print(Fore.YELLOW + "Iniciando sistema...")
@@ -128,18 +128,26 @@ class PrestamoColor:
 
             self.fecha_inicio = datetime.strptime(fecha, "%Y-%m-%d")
 
+        # CREAR NUEVO PRÉSTAMO
         else:
 
-            self.monto_inicial = CalculadoraPrestamo.monto_total(monto, self.tasa_mensual, meses)
-            self.saldo = self.monto_inicial
+            # El monto inicial debe ser solo el dinero prestado
+            self.monto_inicial = monto
+            self.saldo = monto
             self.meses = meses
-            self.monto = self.monto_inicial   # ⭐ IMPORTANTE
+            self.monto = monto   # importante para cálculos
             self.fecha_inicio = datetime.today()
 
             cursor.execute("""
             INSERT INTO prestamos (monto_inicial, saldo, meses, tasa, fecha_inicio)
             VALUES (?,?,?,?,?)
-            """,(self.monto_inicial,self.saldo,self.meses,self.tasa_mensual,self.fecha_inicio.strftime("%Y-%m-%d")))
+            """,(
+                self.monto_inicial,
+                self.saldo,
+                self.meses,
+                self.tasa_mensual,
+                self.fecha_inicio.strftime("%Y-%m-%d")
+            ))
 
             conn.commit()
             self.id = cursor.lastrowid
@@ -232,8 +240,6 @@ class PrestamoColor:
         interes_total = self.interes_total_prestamo()
         interes_restante = self.interes_restante()
 
-        print(Fore.CYAN+"\n=========== RESUMEN FINANCIERO ===========")
-
         print(Fore.GREEN+f"Monto del préstamo : ${self.monto_inicial:.2f}")
         print(Fore.YELLOW+f"Tasa mensual       : {self.tasa_mensual*100:.2f}%")
         print(Fore.BLUE+f"Cuota mensual      : ${cuota:.2f}")
@@ -298,7 +304,9 @@ class PrestamoColor:
             if c['Mes']==mes:
 
                 if c['Estado']=='pagada':
-                    print(Fore.RED+"❌ Cuota ya pagada")
+                    print(Fore.CYAN + "╔════════════════════╗")
+                    print(Fore.RED+"║ ❌ Cuota ya pagada ║")
+                    print(Fore.CYAN + "╚════════════════════╝")
                     return
 
                 monto=c['Cuota']
@@ -325,7 +333,9 @@ class PrestamoColor:
                 self.cargar_cuotas()
                 self.cargar_abonos()
 
-                print(Fore.GREEN+f"✔ Cuota {mes} pagada correctamente")
+                print(Fore.CYAN+"╔════════════════════════════════╗")
+                print(Fore.GREEN+f"║ ✔ Cuota {mes} pagada correctamente ║")
+                print(Fore.CYAN+"╚════════════════════════════════╝")
                 return
 
         print(Fore.RED+"Mes no encontrado")
@@ -384,11 +394,14 @@ class PrestamoColor:
                     self.cargar_cuotas()
                     self.cargar_abonos()
 
-                    print(Fore.YELLOW+f"✔ Cuota {mes} cambiada a pendiente")
+                    print(Fore.CYAN + "╔════════════════════════════════╗")
+                    print(Fore.YELLOW+f"║ ✔ Cuota {mes} cambiada a pendiente ║")
+                    print(Fore.CYAN + "╚════════════════════════════════╝")
                     
                 else:
-                    print(Fore.RED+"Use 'Pagar cuota' para registrar el pago")
-
+                    print(Fore.CYAN + "╔══════════════════════════════════════════╗")
+                    print(Fore.RED+"║ Use 'Pagar cuota' para registrar el pago ║")
+                    print(Fore.CYAN + "╚══════════════════════════════════════════╝")
                 return
 
         print(Fore.RED+"Mes no encontrado")
@@ -440,7 +453,9 @@ class PrestamoColor:
         abono=cursor.fetchone()
 
         if not abono:
-            print(Fore.RED+"Abono no encontrado")
+            print(Fore.CYAN + "╔═════════════════════╗")
+            print(Fore.RED+"║ Abono no encontrado ║")
+            print(Fore.CYAN + "╚═════════════════════╝")
             return
 
         capital=abono[0]
@@ -467,8 +482,9 @@ class PrestamoColor:
         self.cargar_cuotas()
         self.cargar_abonos()
 
-        print(Fore.YELLOW+"Abono eliminado y saldo restaurado")
-
+        print(Fore.CYAN + "╔════════════════════════════════════╗")
+        print(Fore.YELLOW+"║ Abono eliminado y saldo restaurado ║")
+        print(Fore.CYAN + "╚════════════════════════════════════╝")
     def eliminar_prestamo(self):
         print(Fore.CYAN+"+==============================================================+")
         confirm=input(Fore.RED+" |¿Seguro que desea eliminar este préstamo? (S/N): S=SI / N=NO | ")
@@ -495,13 +511,13 @@ class PrestamoColor:
         pagado=self.monto_inicial-self.saldo
         progreso=pagado/self.monto_inicial
 
-        largo=40
+        largo=30
         llenado=int(largo*progreso)
 
         barra="█"*llenado+"░"*(largo-llenado)
         porcentaje=progreso*100
 
-        print(Fore.CYAN+"\n=========== PROGRESO DEL PRÉSTAMO ===========")
+        print(Fore.CYAN+"\n========= PROGRESO DEL PRÉSTAMO =========")
         print(Fore.GREEN+f"Monto inicial : ${self.monto_inicial:.2f}")
         print(Fore.YELLOW+f"Pagado        : ${pagado:.2f}")
         print(Fore.RED+f"Saldo restante: ${self.saldo:.2f}")
@@ -517,7 +533,7 @@ class PrestamoColor:
     def mostrar_abonos(self):
 
         if not self.abonos:
-            print(Fore.CYAN+"No hay pagos registrados")
+
             return
 
         tabla=[]
@@ -563,8 +579,10 @@ def menu_principal():
         print(Fore.CYAN + "+----+------------------------------+")
         print(Fore.GREEN + "| 3  | Salir                        |")
         print(Fore.CYAN + "+----+------------------------------+")
-
-        op = input(Fore.YELLOW + "| Seleccione una opción: ")
+        
+        print(Fore.CYAN + "╔════════════════════════╗")
+        op = input(Fore.YELLOW + "║ Seleccione una opción: ║ ")
+        print(Fore.CYAN + "╚════════════════════════╝")
 
         if op == "1":
 
@@ -591,7 +609,7 @@ def menu_principal():
                     break
                 except ValueError:
                     print(Fore.CYAN + "+-----------------------------------+")
-                    print(Fore.RED + "|    ❌ Ingrese un número entero válido    |")
+                    print(Fore.RED + "|❌ Ingrese un número entero válido |")
             limpiar_pantalla()
             prestamo = PrestamoColor(monto=monto, meses=meses)
             menu_prestamo(prestamo)
@@ -626,6 +644,7 @@ def menu_principal():
 
             while True:
                 try:
+                    print(Fore.CYAN + "+====+===============+==============+")
                     pid = int(input(Fore.YELLOW + "| Ingrese ID del préstamo: "))
                     print(Fore.YELLOW + "+--------------------------+")
                     break
@@ -699,22 +718,20 @@ def menu_prestamo(prestamo):
 
             limpiar_pantalla()
 
-            print(Fore.CYAN + "+--------------------------------+")
-            print(Fore.CYAN + "|          VER CUOTAS            |")
-            print(Fore.CYAN + "+--------------------------------+")
-
+            print(Fore.CYAN + "╔════════════╗")
+            print(Fore.CYAN + "║ VER CUOTAS ║")
+            print(Fore.CYAN + "╚════════════╝")
             prestamo.mostrar_cuotas()
 
-            print(Fore.CYAN + "+--------------------------------+")
             pausa()
        # PAGAR CUOTA
         elif op == "2":
 
             limpiar_pantalla()
 
-            print(Fore.CYAN + "+-------------------------+")
-            print(Fore.CYAN + "|        PAGAR CUOTA      |")
-            print(Fore.CYAN + "+-------------------------+")
+            print(Fore.CYAN + "╔═════════════╗")
+            print(Fore.CYAN + "║ PAGAR CUOTA ║")
+            print(Fore.CYAN + "╚═════════════╝")
 
             prestamo.mostrar_cuotas()
 
@@ -749,13 +766,12 @@ def menu_prestamo(prestamo):
 
             limpiar_pantalla()
 
-            print(Fore.CYAN + "+--------------------------------+")
-            print(Fore.CYAN + "|        HISTORIAL DE PAGOS      |")
-            print(Fore.CYAN + "+--------------------------------+")
+            print(Fore.CYAN + "╔════════════════════╗")
+            print(Fore.CYAN + "║ HISTORIAL DE PAGOS ║")
+            print(Fore.CYAN + "╚════════════════════╝")
 
             prestamo.mostrar_abonos()
 
-            print(Fore.CYAN + "+--------------------------------+")
             pausa()
         
         # PROGRESO
@@ -772,20 +788,25 @@ def menu_prestamo(prestamo):
 
             limpiar_pantalla()
 
-            print(Fore.CYAN + "+--------------------------------+")
-            print(Fore.CYAN + "|      CAMBIAR ESTADO CUOTA      |")
-            print(Fore.CYAN + "+--------------------------------+")
+            print(Fore.CYAN + "╔══════════════════════╗")
+            print(Fore.CYAN + "║ CAMBIAR ESTADO CUOTA ║")
+            print(Fore.CYAN + "╚══════════════════════╝")
 
             # MOSTRAR TABLA DE CUOTAS
             prestamo.mostrar_cuotas()
 
-            print(Fore.CYAN + "+--------------------------------+")
-
             try:
                 mes = int(input(Fore.YELLOW + "| Número de cuota a modificar: "))
-                print(Fore.CYAN + "+--------------------------------+")
 
                 prestamo.cambiar_estado_cuota(mes)
+
+                # 🔄 MOSTRAR TABLA ACTUALIZADA
+                print()
+                print(Fore.CYAN + "╔════════════════════════════╗")
+                print(Fore.CYAN + "║  CUOTAS ACTUALIZADAS       ║")
+                print(Fore.CYAN + "╚════════════════════════════╝")
+
+                prestamo.mostrar_cuotas()
 
             except ValueError:
                 print(Fore.RED + "+--------------------------------+")
@@ -799,25 +820,29 @@ def menu_prestamo(prestamo):
 
             limpiar_pantalla()
 
-            print(Fore.CYAN + "+--------------------------------+")
-            print(Fore.CYAN + "|          ELIMINAR ABONO        |")
-            print(Fore.CYAN + "+--------------------------------+")
+            print(Fore.CYAN + "╔════════════════╗")
+            print(Fore.CYAN + "║ ELIMINAR ABONO ║")
+            print(Fore.CYAN + "╚════════════════╝   ")
 
             # Mostrar tabla de abonos
-            prestamo.mostrar_abonos()
+            hay_abonos = prestamo.mostrar_abonos()
 
-            print(Fore.CYAN + "+--------------------------------+")
-            print(Fore.CYAN + "| Ingrese el ID del abono        |")
-            print(Fore.CYAN + "+--------------------------------+")
+            if not hay_abonos:
 
-            try:
-                abono_id = int(input(Fore.YELLOW + "| ID del abono: "))
-                prestamo.eliminar_abono(abono_id)
+                print(Fore.RED + "╔════════════════════════════╗")
+                print(Fore.RED + "║  No hay abonos registrados ║")
+                print(Fore.RED + "╚════════════════════════════╝")
 
-            except ValueError:
-                print(Fore.RED + "+--------------------------------+")
-                print(Fore.RED + "| ❌ Entrada inválida            |")
-                print(Fore.RED + "+--------------------------------+")
+            else:
+
+                try:
+                    abono_id = int(input(Fore.YELLOW + "| ID del abono: "))
+                    prestamo.eliminar_abono(abono_id)
+
+                except ValueError:
+                    print(Fore.RED + "╔═════════════════════╗")
+                    print(Fore.RED + "║ ❌ Entrada inválida ║")
+                    print(Fore.RED + "╚═════════════════════╝")
 
             pausa()
 
@@ -825,6 +850,10 @@ def menu_prestamo(prestamo):
         elif op == "8":
 
             limpiar_pantalla()
+
+            print(Fore.CYAN + "╔══════════════════════════════╗")
+            print(Fore.CYAN + "║      RESUMEN FINANCIERO      ║")
+            print(Fore.CYAN + "╚══════════════════════════════╝")
 
             prestamo.resumen_financiero()
 
@@ -879,9 +908,9 @@ def menu_prestamo(prestamo):
         # OPCIÓN INVÁLIDA
         else:
 
-            print(Fore.RED + "+--------------------------------+")
-            print(Fore.RED + "|        ❌ OPCIÓN INVÁLIDA       |")
-            print(Fore.RED + "+--------------------------------+")
+            print(Fore.RED + "+---------------------------+")
+            print(Fore.RED + "|     ❌ OPCIÓN INVÁLIDA    |")
+            print(Fore.RED + "+---------------------------+")
 
             pausa()
 
