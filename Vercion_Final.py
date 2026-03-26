@@ -4,11 +4,11 @@ from tabulate import tabulate
 from colorama import Fore, Style, init
 import os
 import time
-import msvcrt
 
 def pausa():
-    print(Fore.YELLOW + "\n| Presione cualquier tecla para continuar... ")
-    msvcrt.getch()
+    input(Fore.YELLOW + "\n+--------------------------------+\n"
+          "| Presione ENTER para continuar  |\n"
+          "+--------------------------------+")
 
 def limpiar_pantalla():
     os.system("cls" if os.name == "nt" else "clear")
@@ -137,7 +137,7 @@ class PrestamoColor:
             self.fecha_inicio = datetime.today()
 
             cursor.execute("""
-            INSERT INTO prestamos (monto_inicial, saldo, meses, tasa, fecha_inicio
+            INSERT INTO prestamos (monto_inicial, saldo, meses, tasa, fecha_inicio)
             VALUES (?,?,?,?,?)
             """,(self.monto_inicial,self.saldo,self.meses,self.tasa_mensual,self.fecha_inicio.strftime("%Y-%m-%d")))
 
@@ -470,11 +470,15 @@ class PrestamoColor:
         print(Fore.YELLOW+"Abono eliminado y saldo restaurado")
 
     def eliminar_prestamo(self):
+        print(Fore.CYAN+"+==============================================================+")
+        confirm=input(Fore.RED+" |¿Seguro que desea eliminar este préstamo? (S/N): S=SI / N=NO | ")
+     
+        print(Fore.CYAN+"+==============================================================+")
 
-        confirm=input(Fore.RED+"¿Seguro que desea eliminar este préstamo? (s/n): ")
-
-        if confirm.lower()!="s":
-            print("Cancelado")
+        if confirm.upper()!="S":
+            print(Fore.CYAN+"+==========================+")
+            print(Fore.RED+"| Cancelado por el usuario |")
+            print(Fore.CYAN+"+==========================+")
             return
 
         cursor.execute("DELETE FROM cuotas WHERE prestamo_id=?", (self.id,))
@@ -482,8 +486,9 @@ class PrestamoColor:
         cursor.execute("DELETE FROM prestamos WHERE id=?", (self.id,))
 
         conn.commit()
-
-        print(Fore.GREEN+"Préstamo eliminado correctamente")
+        print(Fore.CYAN+"+================================+")
+        print(Fore.GREEN+"|Préstamo eliminado correctamente|")
+        print(Fore.CYAN+"+================================+")
 
     def barra_progreso(self):
 
@@ -693,9 +698,15 @@ def menu_prestamo(prestamo):
         if op == "1":
 
             limpiar_pantalla()
-            prestamo.mostrar_cuotas()
-            pausa()
 
+            print(Fore.CYAN + "+--------------------------------+")
+            print(Fore.CYAN + "|          VER CUOTAS            |")
+            print(Fore.CYAN + "+--------------------------------+")
+
+            prestamo.mostrar_cuotas()
+
+            print(Fore.CYAN + "+--------------------------------+")
+            pausa()
        # PAGAR CUOTA
         elif op == "2":
 
@@ -737,30 +748,49 @@ def menu_prestamo(prestamo):
         elif op == "4":
 
             limpiar_pantalla()
-            prestamo.mostrar_abonos()
-            pausa()
 
+            print(Fore.CYAN + "+--------------------------------+")
+            print(Fore.CYAN + "|        HISTORIAL DE PAGOS      |")
+            print(Fore.CYAN + "+--------------------------------+")
+
+            prestamo.mostrar_abonos()
+
+            print(Fore.CYAN + "+--------------------------------+")
+            pausa()
+        
         # PROGRESO
         elif op == "5":
 
             limpiar_pantalla()
+
             prestamo.barra_progreso()
+
             pausa()
 
-        # CAMBIAR ESTADO
+        # CAMBIAR ESTADO CUOTA
         elif op == "6":
 
             limpiar_pantalla()
 
-            print(Fore.CYAN + "+--------------------------+")
-            print(Fore.CYAN + "|   CAMBIAR ESTADO CUOTA   |")
-            print(Fore.CYAN + "+--------------------------+")
+            print(Fore.CYAN + "+--------------------------------+")
+            print(Fore.CYAN + "|      CAMBIAR ESTADO CUOTA      |")
+            print(Fore.CYAN + "+--------------------------------+")
+
+            # MOSTRAR TABLA DE CUOTAS
+            prestamo.mostrar_cuotas()
+
+            print(Fore.CYAN + "+--------------------------------+")
 
             try:
-                mes = int(input(Fore.YELLOW + "| Número de cuota: "))
+                mes = int(input(Fore.YELLOW + "| Número de cuota a modificar: "))
+                print(Fore.CYAN + "+--------------------------------+")
+
                 prestamo.cambiar_estado_cuota(mes)
-            except:
-                print(Fore.RED + "❌ Entrada inválida")
+
+            except ValueError:
+                print(Fore.RED + "+--------------------------------+")
+                print(Fore.RED + "| ❌ Entrada inválida            |")
+                print(Fore.RED + "+--------------------------------+")
 
             pausa()
 
@@ -769,25 +799,35 @@ def menu_prestamo(prestamo):
 
             limpiar_pantalla()
 
+            print(Fore.CYAN + "+--------------------------------+")
+            print(Fore.CYAN + "|          ELIMINAR ABONO        |")
+            print(Fore.CYAN + "+--------------------------------+")
+
+            # Mostrar tabla de abonos
             prestamo.mostrar_abonos()
 
-            print(Fore.CYAN + "\n+------------------------+")
-            print(Fore.CYAN + "|     ELIMINAR ABONO     |")
-            print(Fore.CYAN + "+------------------------+")
+            print(Fore.CYAN + "+--------------------------------+")
+            print(Fore.CYAN + "| Ingrese el ID del abono        |")
+            print(Fore.CYAN + "+--------------------------------+")
 
             try:
                 abono_id = int(input(Fore.YELLOW + "| ID del abono: "))
                 prestamo.eliminar_abono(abono_id)
-            except:
-                print(Fore.RED + "❌ Entrada inválida")
+
+            except ValueError:
+                print(Fore.RED + "+--------------------------------+")
+                print(Fore.RED + "| ❌ Entrada inválida            |")
+                print(Fore.RED + "+--------------------------------+")
 
             pausa()
 
-        # RESUMEN
+       # RESUMEN FINANCIERO
         elif op == "8":
 
             limpiar_pantalla()
+
             prestamo.resumen_financiero()
+
             pausa()
 
         # ELIMINAR PRESTAMO
@@ -795,25 +835,54 @@ def menu_prestamo(prestamo):
 
             limpiar_pantalla()
 
-            print(Fore.RED + "+------------------------+")
-            print(Fore.RED + "|   ELIMINAR PRÉSTAMO    |")
-            print(Fore.RED + "+------------------------+")
+            print(Fore.RED + "+------------------------------------+")
+            print(Fore.RED + "|         ELIMINAR PRÉSTAMO          |")
+            print(Fore.RED + "+------------------------------------+")
+            print(Fore.YELLOW + "|    ¿Seguro que desea eliminarlo?   |")
+            print(Fore.YELLOW + "|  Esta acción no se puede deshacer  |")
+            print(Fore.RED + "+------------------------------------+")
 
-            confirm = input(Fore.YELLOW + "| ¿Seguro? (s/n): ")
+            print(Fore.CYAN + "+------------------+--------------+")
+            confirm = input(Fore.CYAN + "| Confirmar (S/N): | S=SI / N=NO  |")
+            print(Fore.CYAN + "+------------------+--------------+")
 
-            if confirm.lower() == "s":
+            if confirm.upper() == "S":
+
                 prestamo.eliminar_prestamo()
+
+
                 pausa()
                 break
 
+            else:
+
+                print(Fore.YELLOW + "+---------------------------------+")
+                print(Fore.YELLOW + "|       OPERACIÓN CANCELADA       |")
+                print(Fore.YELLOW + "+---------------------------------+")
+
+                pausa()
+
+
         # VOLVER
         elif op == "10":
+
+            limpiar_pantalla()
+
+            print(Fore.CYAN + "+--------------------------------+")
+            print(Fore.CYAN + "|        VOLVIENDO AL MENÚ       |")
+            print(Fore.CYAN + "+--------------------------------+")
+
+            pausa()
             break
 
+
+        # OPCIÓN INVÁLIDA
         else:
-            print(Fore.RED + "+---------------------------+")
-            print(Fore.RED + "|    ❌ Opción inválida     |")
-            print(Fore.RED + "+---------------------------+")
+
+            print(Fore.RED + "+--------------------------------+")
+            print(Fore.RED + "|        ❌ OPCIÓN INVÁLIDA       |")
+            print(Fore.RED + "+--------------------------------+")
+
             pausa()
 
 
