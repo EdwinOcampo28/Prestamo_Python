@@ -416,7 +416,9 @@ class PrestamoColor:
                     print(Fore.CYAN + "╚══════════════════════════════════════════╝")
                 return
 
-        print(Fore.RED+"Mes no encontrado")
+        print(Fore.MAGENTA+"╔══════════════════════╗")
+        print(Fore.RED+"║ ❌ Mes no encontrado ║")
+        print(Fore.MAGENTA+"╚══════════════════════╝")
 
     def abonar_extra(self,monto):
 
@@ -428,16 +430,16 @@ class PrestamoColor:
 
         # Si el préstamo ya está pagado
         if self.saldo <= 0:
-            print(Fore.MAGENTA + "╔═══════════════════════════════════╗")
-            print(Fore.RED + "║ ⚠ El préstamo ya está pagado".ljust(36) + "║")
-            print(Fore.MAGENTA + "╚═══════════════════════════════════╝")
+            print(Fore.MAGENTA + "╔═══════════════════════════════╗")
+            print(Fore.RED + "║ ⚠ El préstamo ya está pagado".ljust(32) + "║")
+            print(Fore.MAGENTA + "╚═══════════════════════════════╝")
             return
 
         # Si el abono es mayor que el saldo restante
         if monto > self.saldo:
             print(Fore.MAGENTA + "╔═══════════════════════════════════╗")
-            print(Fore.YELLOW + f"║ ⚠ Abono mayor al saldo".ljust(36) + "║")
-            print(Fore.YELLOW + f"║ Se recibirá solo: ${self.saldo:.2f}".ljust(36) + "║")
+            print(Fore.RED + f"║      ⚠  Abono mayor al saldo".ljust(36) + "║")
+            print(Fore.GREEN + f"║  ✔ Se recibirá solo: ${self.saldo:.2f}".ljust(36) + "║")
             print(Fore.MAGENTA + "╚═══════════════════════════════════╝")
             monto = self.saldo
 
@@ -463,16 +465,21 @@ class PrestamoColor:
 
         saldo_actual = self.saldo
 
+        self.saldo -= capital
+
+        if self.saldo < 0:
+            self.saldo = 0
+
         print(Fore.MAGENTA + "╔═══════════════════════════════════╗")
         print(Fore.CYAN +   f"║ 💰 Saldo actual:    ║ ${saldo_actual:.2f}".ljust(35) + "║")
-        print(Fore.GREEN +  f"║ ✔ Abono realizado:  ║ ${monto:.2f}".ljust(35) + "║")
+        print(Fore.GREEN +  f"║ ✔ Abono realizado:  ║ ${monto:.2f}".ljust(36) + "║")
         print(Fore.YELLOW + f"║ 💰 Saldo restante:  ║ ${self.saldo:.2f}".ljust(35) + "║")
         print(Fore.MAGENTA + "╚═══════════════════════════════════╝")
 
         # Si el préstamo quedó pagado
         if self.saldo == 0:
             print(Fore.MAGENTA + "╔═══════════════════════════════════╗")
-            print(Fore.GREEN + "║ 🎉 ¡Préstamo completamente pagado!".ljust(36) + "║")
+            print(Fore.GREEN + "║ 🎉 ¡Préstamo completamente pagado!".ljust(35) + "║")
             print(Fore.MAGENTA + "╚═══════════════════════════════════╝")
 
     def eliminar_abono(self,abono_id):
@@ -514,9 +521,9 @@ class PrestamoColor:
         self.cargar_cuotas()
         self.cargar_abonos()
 
-        print(Fore.CYAN + "╔════════════════════════════════════╗")
-        print(Fore.YELLOW+"║ Abono eliminado y saldo restaurado ║")
-        print(Fore.CYAN + "╚════════════════════════════════════╝")
+        print(Fore.RED + "╔════════════════════════════════════╗")
+        print(Fore.MAGENTA+"║ Abono eliminado y saldo restaurado ║")
+        print(Fore.RED + "╚════════════════════════════════════╝")
     def eliminar_prestamo(self):
         print(Fore.CYAN+"+==============================================================+")
         confirm=input(Fore.RED+" |¿Seguro que desea eliminar este préstamo? (S/N): S=SI / N=NO | ")
@@ -730,7 +737,7 @@ def menu_prestamo(prestamo):
         print(Fore.CYAN + "╠════╬══════════════════════╣")
         print(Fore.GREEN + "║ 2  ║ Pagar cuota          ║")
         print(Fore.CYAN + "╠════╬══════════════════════╣")
-        print(Fore.GREEN + "║ 3  ║ Abono extra          ║")
+        print(Fore.GREEN + "║ 3  ║ Abono extra Capital  ║")
         print(Fore.CYAN + "╠════╬══════════════════════╣")
         print(Fore.GREEN + "║ 4  ║ Historial pagos      ║")
         print(Fore.CYAN + "╠════╬══════════════════════╣")
@@ -785,9 +792,9 @@ def menu_prestamo(prestamo):
 
             limpiar_pantalla()
 
-            print(Fore.RED + "╔═══════════════════════╗")
-            print(Fore.CYAN + "║      ABONO EXTRA      ║")
-            print(Fore.RED + "╚═══════════════════════╝")
+            print(Fore.RED + "╔═════════════════════╗")
+            print(Fore.CYAN + "║ ABONO EXTRA CAPITAL ║")
+            print(Fore.RED + "╚═════════════════════╝")
 
             try:
                 print(Fore.GREEN + "+=======================+")
@@ -795,7 +802,9 @@ def menu_prestamo(prestamo):
                 print(Fore.GREEN + "+=======================+")
                 prestamo.abonar_extra(monto)
             except:
-                print(Fore.RED + "❌ Entrada inválida")
+                print(Fore.RED + "╔════════════════════╗")
+                print(Fore.RED + "║❌ Entrada inválida ║")
+                print(Fore.RED + "╚════════════════════╝")
 
             pausa()
 
