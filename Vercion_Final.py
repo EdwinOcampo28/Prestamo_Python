@@ -185,14 +185,16 @@ class PrestamoColor:
 
     def eliminar_abono(self, abono_id):
 
-        cursor.execute("SELECT monto FROM abonos WHERE id = ? AND prestamo_id = ?", 
-                    (abono_id, self.id))
+        cursor.execute(
+            "SELECT monto FROM abonos WHERE id = ? AND prestamo_id = ?",
+            (abono_id, self.id)
+        )
         abono = cursor.fetchone()
 
         if not abono:
-            print(Fore.RED + "╔══════════════════════╗")
+            print(Fore.RED + "╔════════════════════════╗")
             print(Fore.RED + "║ ❌ Abono no encontrado ║")
-            print(Fore.RED + "╚══════════════════════╝")
+            print(Fore.RED + "╚════════════════════════╝")
             return
 
         monto = abono[0]
@@ -203,18 +205,21 @@ class PrestamoColor:
         # Eliminar abono
         cursor.execute("DELETE FROM abonos WHERE id = ?", (abono_id,))
 
-        # Actualizar saldo en la BD
+        # Actualizar saldo en BD
         self.actualizar_saldo_db()
 
         conn.commit()
 
-        # Recargar abonos
+        # 🔹 Recargar abonos
         self.cargar_abonos()
 
-        print(Fore.GREEN + "╔══════════════════════════════╗")
-        print(Fore.GREEN + f"║ ✔ Abono eliminado: ${monto:.2f}".ljust(30) + "║")
-        print(Fore.YELLOW + f"║ 💰 Saldo restaurado: ${self.saldo:.2f}".ljust(30) + "║")
-        print(Fore.GREEN + "╚══════════════════════════════╝")
+        # 🔹 RECALCULAR CUOTAS
+        self.recalcular_cuotas()
+
+        print(Fore.GREEN + "╔══════════════════════════════════╗")
+        print(Fore.GREEN + f"║ ✔ Abono eliminado: ${monto:.2f}".ljust(34) + "║")
+        print(Fore.YELLOW + f"║ 💰 Saldo restaurado: ${self.saldo:.2f}".ljust(31) + "║")
+        print(Fore.GREEN + "╚══════════════════════════════════╝")
 
     # ===== RECALCULAR CUOTAS =====
 
@@ -769,7 +774,7 @@ def menu_principal():
 
                 except ValueError:
                     print(Fore.RED + "╠══════════════════════════╣")
-                    print(Fore.RED + "║ ❌ Ingrese un número válido ║")
+                    print(Fore.RED + "║ ❌ Ingrese número válido ║")
                     print(Fore.RED + "╠══════════════════════════╣")
 
             # INGRESAR MESES
@@ -790,7 +795,7 @@ def menu_principal():
 
                 except ValueError:
                     print(Fore.RED + "╠══════════════════════════╣")
-                    print(Fore.RED + "║ ❌ Debe ingresar un número entero ║")
+                    print(Fore.RED + "║ ❌ Ingrese número entero ║")
                     print(Fore.RED + "╠══════════════════════════╣")
 
             limpiar_pantalla()
@@ -1089,9 +1094,7 @@ def menu_prestamo(prestamo):
 
             pausa()
 
-        # ===================================
-        # ELIMINAR PRÉSTAMO
-        # ===================================
+         # ELIMINAR PRESTAMO
         elif op == "8":
 
             limpiar_pantalla()
@@ -1099,14 +1102,18 @@ def menu_prestamo(prestamo):
             print(Fore.RED + "+------------------------------------+")
             print(Fore.RED + "|         ELIMINAR PRÉSTAMO          |")
             print(Fore.RED + "+------------------------------------+")
+            print(Fore.YELLOW + "|    ¿Seguro que desea eliminarlo?   |")
             print(Fore.YELLOW + "|  Esta acción no se puede deshacer  |")
             print(Fore.RED + "+------------------------------------+")
 
-            confirm = input(Fore.CYAN + "| Confirmar (S/N): ")
+            print(Fore.CYAN + "+------------------+--------------+")
+            confirm = input(Fore.CYAN + "| Confirmar (S/N): | S=SI / N=NO  |")
+            print(Fore.CYAN + "+------------------+--------------+")
 
             if confirm.upper() == "S":
 
                 prestamo.eliminar_prestamo()
+
 
                 pausa()
                 break
