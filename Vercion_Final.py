@@ -126,6 +126,8 @@ class PrestamoColor:
 
             self.monto = self.monto_inicial   # ⭐ ESTA LÍNEA ARREGLA TU ERROR
 
+            self.interes_pagado = 0
+
             self.fecha_inicio = datetime.strptime(fecha, "%Y-%m-%d")
 
         # CREAR NUEVO PRÉSTAMO
@@ -217,15 +219,14 @@ class PrestamoColor:
         total = cuota * self.meses
 
         return round(total,2)
-
-
+    
     def interes_restante(self):
 
         total_interes = self.interes_total_prestamo()
 
         capital_pagado = self.monto_inicial - self.saldo
 
-        interes_restante = total_interes - capital_pagado
+        interes_restante = total_interes - (total_interes * (capital_pagado / self.monto_inicial))
 
         if interes_restante < 0:
             interes_restante = 0
@@ -234,14 +235,15 @@ class PrestamoColor:
 
 
     def resumen_financiero(self):
-        
-       
+
         pagado=self.monto_inicial-self.saldo
         progreso=pagado/self.monto_inicial
         cuota = self.cuota_mensual()
         total = self.total_a_pagar()
         interes_total = self.interes_total_prestamo()
         interes_restante = self.interes_restante()
+        interes=interes_total-interes_restante
+        
         largo=35
         llenado=int(largo*progreso)
 
@@ -263,8 +265,8 @@ class PrestamoColor:
         print(Fore.MAGENTA + "║         TOTALES PAGADOS          ║")
         print(Fore.CYAN + "╠══════════════════════════════════╣")
         
-        
-        print(Fore.YELLOW + f"║ Interés pagado     : ${pagado:>10.2f} ║")
+        print(Fore.GREEN + f"║ Saldo pagado       : ${pagado:>10.2f} ║")
+        print(Fore.YELLOW + f"║ Interés Pagado     : ${interes:>10.2f} ║")
 
         print(Fore.CYAN + "╠══════════════════════════════════╣")
         print(Fore.RED + "║          ESTADO ACTUAL           ║")
@@ -418,40 +420,60 @@ class PrestamoColor:
 
     def abonar_extra(self,monto):
 
-        if monto<=0:
-            print(Fore.RED+"Monto inválido")
+        if monto <= 0:
+            print(Fore.MAGENTA + "╔═══════════════════════════════════╗")
+            print(Fore.RED + "║ ⚠ Monto inválido".ljust(36) + "║")
+            print(Fore.MAGENTA + "╚═══════════════════════════════════╝")
             return
 
-        interes = CalculadoraPrestamo.interes_cuota(self.saldo, self.tasa_mensual)
+        # Si el préstamo ya está pagado
+        if self.saldo <= 0:
+            print(Fore.MAGENTA + "╔═══════════════════════════════════╗")
+            print(Fore.RED + "║ ⚠ El préstamo ya está pagado".ljust(36) + "║")
+            print(Fore.MAGENTA + "╚═══════════════════════════════════╝")
+            return
 
-        if monto<=interes:
-            interes_pagado=monto
-            capital=0
-        else:
-            interes_pagado=interes
-            capital=monto-interes
+        # Si el abono es mayor que el saldo restante
+        if monto > self.saldo:
+            print(Fore.MAGENTA + "╔═══════════════════════════════════╗")
+            print(Fore.YELLOW + f"║ ⚠ Abono mayor al saldo".ljust(36) + "║")
+            print(Fore.YELLOW + f"║ Se recibirá solo: ${self.saldo:.2f}".ljust(36) + "║")
+            print(Fore.MAGENTA + "╚═══════════════════════════════════╝")
+            monto = self.saldo
 
-        self.saldo-=capital
+        capital = monto
 
-        fecha=datetime.today().strftime("%Y-%m-%d")
+        self.saldo -= capital
+
+        if self.saldo < 0:
+            self.saldo = 0
+
+        fecha = datetime.today().strftime("%Y-%m-%d")
 
         cursor.execute("""
         INSERT INTO abonos (prestamo_id,fecha,monto,interes,capital,saldo_restante)
         VALUES (?,?,?,?,?,?)
-        """,(self.id,fecha,monto,interes_pagado,capital,max(self.saldo,0)))
+        """,(self.id,fecha,monto,0,capital,self.saldo))
 
         self.actualizar_saldo_db()
 
         conn.commit()
 
         self.cargar_abonos()
-        
+
+        saldo_actual = self.saldo
+
         print(Fore.MAGENTA + "╔═══════════════════════════════════╗")
-        print(Fore.GREEN +  f"║ ✔ Abono registrado: ║ ${monto:.2f}".ljust(36) + "║")
-        print(Fore.YELLOW + f"║ 💰 Interés pagado:  ║ ${interes_pagado:.2f}".ljust(35) + "║")
-        print(Fore.CYAN +   f"║ 💰 Capital pagado:  ║ ${capital:.2f}".ljust(35) + "║")
-        print(Fore.RED +    f"║ 💰 Saldo restante:  ║ ${self.saldo:.2f}".ljust(35) + "║")
+        print(Fore.CYAN +   f"║ 💰 Saldo actual:    ║ ${saldo_actual:.2f}".ljust(35) + "║")
+        print(Fore.GREEN +  f"║ ✔ Abono realizado:  ║ ${monto:.2f}".ljust(35) + "║")
+        print(Fore.YELLOW + f"║ 💰 Saldo restante:  ║ ${self.saldo:.2f}".ljust(35) + "║")
         print(Fore.MAGENTA + "╚═══════════════════════════════════╝")
+
+        # Si el préstamo quedó pagado
+        if self.saldo == 0:
+            print(Fore.MAGENTA + "╔═══════════════════════════════════╗")
+            print(Fore.GREEN + "║ 🎉 ¡Préstamo completamente pagado!".ljust(36) + "║")
+            print(Fore.MAGENTA + "╚═══════════════════════════════════╝")
 
     def eliminar_abono(self,abono_id):
 
