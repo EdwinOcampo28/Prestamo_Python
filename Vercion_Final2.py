@@ -97,7 +97,7 @@ conn.commit()
 
 class PrestamoColor:
 
-    def __init__(self, prestamo_id=None, monto=None, meses=None, tasa_mensual=0.018):
+    def __init__(self, prestamo_id=None, monto=None, meses=None, tasa_mensual=0.020):
 
         self.tasa_mensual = tasa_mensual
 
@@ -174,7 +174,6 @@ class PrestamoColor:
             for cid,m,f,c,i,cap,s,e in cursor.fetchall()
         ]
 
-
     def cuota_mensual(self):
 
         P=self.monto_inicial
@@ -243,7 +242,7 @@ class PrestamoColor:
         porcentaje=progreso*100
 
         print(Fore.GREEN  + f"║ Monto del préstamo : ${self.monto_inicial:>10.0f} ║")
-        print(Fore.YELLOW + f"║ Tasa mensual       :       1.8 % ║")
+        print(Fore.YELLOW + f"║ Tasa mensual       :         {self.tasa_mensual*100:.0f} % ║")
         print(Fore.BLUE   + f"║ Cuota mensual      : ${cuota:>10.0f} ║")
 
         print(Fore.CYAN + "╠══════════════════════════════════╣")
@@ -298,7 +297,6 @@ class PrestamoColor:
 
         conn.commit()
         self.cargar_cuotas()
-
 
     def mostrar_cuotas(self):
         if not self.cuotas:
@@ -542,7 +540,7 @@ def menu_principal():
 
             if not existe:
                 print(Fore.RED + "╔═════════════════════════════════╗")
-                print(Fore.RED + "║El Número de préstamo no existe ║")
+                print(Fore.RED + "║ El Número de préstamo no existe ║")
                 print(Fore.RED + "╚═════════════════════════════════╝")
                 input(Fore.YELLOW + "| Presione Enter para continuar... ")
                 continue
@@ -563,7 +561,6 @@ def menu_principal():
             print(Fore.RED + "║  ❌ Opción inválida  ║")
             print(Fore.RED + "╚══════════════════════╝")
             input(Fore.YELLOW + "| Presione Enter para continuar... ")
-    
     
 def menu_prestamo(prestamo):
 
@@ -736,7 +733,6 @@ def menu_prestamo(prestamo):
 
                 prestamo.eliminar_prestamo()
 
-
                 pausa()
                 break
 
@@ -747,7 +743,6 @@ def menu_prestamo(prestamo):
                 print(Fore.YELLOW + "+---------------------------------+")
 
                 pausa()
-
 
         # VOLVER
         elif op == "7":
@@ -761,7 +756,6 @@ def menu_prestamo(prestamo):
             pausa()
             break
 
-
         # OPCIÓN INVÁLIDA
         else:
 
@@ -770,7 +764,6 @@ def menu_prestamo(prestamo):
             print(Fore.RED + "╚═══════════════════════════╝")
 
             pausa()
-
 
 pantalla_inicio()
 menu_principal()
