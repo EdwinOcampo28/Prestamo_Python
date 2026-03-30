@@ -231,8 +231,18 @@ class PrestamoColor:
         interes_total = self.interes_total_prestamo()
         interes_restante = self.interes_restante()
         interes=interes_total-interes_restante
+
+        # evitar pequeños negativos por redondeo
+        pagado = max(0, pagado)
+        interes = max(0, interes)
+        interes_restante = max(0, interes_restante)
+        self.saldo = max(0, self.saldo)
         
         largo=35
+
+        # evitar que la barra se rompa
+        progreso = max(0, min(progreso, 1))
+
         llenado=int(largo*progreso)
 
         barra="█"*llenado+"░"*(largo-llenado)
@@ -265,11 +275,13 @@ class PrestamoColor:
 
         print(Fore.CYAN + "╚══════════════════════════════════╝")
 
-        # Evitar que pase de 100% por redondeo and saldos negativos
+        # Evitar que pase de 100%
         if porcentaje>100:
             porcentaje=100
+
         print("\n"+Fore.MAGENTA+f"[{barra}] {porcentaje:.2f}%")
-      #si el prestamo está completamente pagado, mostrar mensaje especial
+
+        # si el prestamo está completamente pagado
         if porcentaje>=99.99:
             print(Fore.GREEN+"\n🎉 ¡Préstamo completamente pagado! 🎉")
 
@@ -584,15 +596,15 @@ def menu_prestamo(prestamo):
         print(Fore.CYAN + "╠════╬══════════════════════╣")
         print(Fore.GREEN + "║ 2  ║ Pagar cuota          ║")
         print(Fore.CYAN + "╠════╬══════════════════════╣")
-        print(Fore.GREEN + "║ 4  ║ Historial pagos      ║")
+        print(Fore.GREEN + "║ 3  ║ Historial pagos      ║")
         print(Fore.CYAN + "╠════╬══════════════════════╣")
-        print(Fore.GREEN + "║ 5  ║ Cambiar estado cuota ║")
+        print(Fore.GREEN + "║ 4  ║ Cambiar estado cuota ║")
         print(Fore.CYAN + "╠════╬══════════════════════╣")
-        print(Fore.GREEN + "║ 7  ║ Resumen financiero   ║")
+        print(Fore.GREEN + "║ 5  ║ Resumen financiero   ║")
         print(Fore.CYAN + "╠════╬══════════════════════╣")
-        print(Fore.GREEN + "║ 8  ║ Eliminar préstamo    ║")
+        print(Fore.GREEN + "║ 6  ║ Eliminar préstamo    ║")
         print(Fore.CYAN + "╠════╬══════════════════════╣")
-        print(Fore.GREEN + "║ 9  ║ Volver               ║")
+        print(Fore.GREEN + "║ 7  ║ Volver               ║")
         print(Fore.CYAN + "╚════╩══════════════════════╝")
 
         op = input(Fore.YELLOW + "║ Seleccione una opción: ")
@@ -632,7 +644,7 @@ def menu_prestamo(prestamo):
             pausa()
        
        # HISTORIAL
-        elif op == "4":
+        elif op == "3":
 
             limpiar_pantalla()
 
@@ -641,7 +653,7 @@ def menu_prestamo(prestamo):
             print(Fore.CYAN + "╚════════════════════╝")
         
         # CAMBIAR ESTADO CUOTA
-        elif op == "5":
+        elif op == "4":
 
             limpiar_pantalla()
 
@@ -674,7 +686,7 @@ def menu_prestamo(prestamo):
             pausa()
 
        # RESUMEN FINANCIERO
-        elif op == "7":
+        elif op == "5":
 
             limpiar_pantalla()
 
@@ -687,7 +699,7 @@ def menu_prestamo(prestamo):
             pausa()
 
         # ELIMINAR PRESTAMO
-        elif op == "8":
+        elif op == "6":
 
             limpiar_pantalla()
 
@@ -720,7 +732,7 @@ def menu_prestamo(prestamo):
 
 
         # VOLVER
-        elif op == "9":
+        elif op == "7":
 
             limpiar_pantalla()
 
