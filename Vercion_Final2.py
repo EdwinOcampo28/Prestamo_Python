@@ -243,7 +243,7 @@ class PrestamoColor:
         porcentaje=progreso*100
 
         print(Fore.GREEN  + f"║ Monto del préstamo : ${self.monto_inicial:>10.0f} ║")
-        print(Fore.YELLOW + f"║ Tasa mensual       : {self.tasa_mensual*100:>10.0f}% ║")
+        print(Fore.YELLOW + f"║ Tasa mensual       :       1.8 % ║")
         print(Fore.BLUE   + f"║ Cuota mensual      : ${cuota:>10.0f} ║")
 
         print(Fore.CYAN + "╠══════════════════════════════════╣")
@@ -388,7 +388,7 @@ class PrestamoColor:
 
                     print(Fore.CYAN + "╔════════════════════════════════╗")
                     print(Fore.RED+f"║ ✔ Cuota {mes} cambiada a pendiente ║")
-                    print(Fore.GREEN + f"║ 💰 Saldo restaurado: ${self.saldo:.0f}  ║")
+                    print(Fore.GREEN + f"║  💰 Saldo restaurado: ${self.saldo:.0f}  ║")
                     print(Fore.CYAN + "╚════════════════════════════════╝")
                     
                 else:
