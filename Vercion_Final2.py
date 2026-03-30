@@ -149,6 +149,12 @@ class PrestamoColor:
 
     def actualizar_saldo_db(self):
 
+        # corregir pequeños residuos de redondeo
+        self.saldo = round(self.saldo, 2)
+
+        if abs(self.saldo) < 1:
+            self.saldo = 0
+
         cursor.execute(
             "UPDATE prestamos SET saldo=? WHERE id=?",
             (self.saldo,self.id)
@@ -236,30 +242,30 @@ class PrestamoColor:
         barra="█"*llenado+"░"*(largo-llenado)
         porcentaje=progreso*100
 
-        print(Fore.GREEN  + f"║ Monto del préstamo : ${self.monto_inicial:>10.2f} ║")
-        print(Fore.YELLOW + f"║ Tasa mensual       : {self.tasa_mensual*100:>10.2f}% ║")
-        print(Fore.BLUE   + f"║ Cuota mensual      : ${cuota:>10.2f} ║")
+        print(Fore.GREEN  + f"║ Monto del préstamo : ${self.monto_inicial:>10.0f} ║")
+        print(Fore.YELLOW + f"║ Tasa mensual       : {self.tasa_mensual*100:>10.0f}% ║")
+        print(Fore.BLUE   + f"║ Cuota mensual      : ${cuota:>10.0f} ║")
 
         print(Fore.CYAN + "╠══════════════════════════════════╣")
         print(Fore.MAGENTA + "║             TOTALES              ║")
         print(Fore.CYAN + "╠══════════════════════════════════╣")
 
-        print(Fore.GREEN  + f"║ Total a pagar      : ${total:>10.2f} ║")
-        print(Fore.YELLOW + f"║ Interés total      : ${interes_total:>10.2f} ║")
+        print(Fore.GREEN  + f"║ Total a pagar      : ${total:>10.0f} ║")
+        print(Fore.YELLOW + f"║ Interés total      : ${interes_total:>10.0f} ║")
 
         print(Fore.CYAN + "╠══════════════════════════════════╣")
         print(Fore.MAGENTA + "║         TOTALES PAGADOS          ║")
         print(Fore.CYAN + "╠══════════════════════════════════╣")
         
-        print(Fore.GREEN + f"║ Saldo pagado       : ${pagado:>10.2f} ║")
-        print(Fore.YELLOW + f"║ Interés Pagado     : ${interes:>10.2f} ║")
+        print(Fore.GREEN + f"║ Saldo pagado       : ${pagado:>10.0f} ║")
+        print(Fore.YELLOW + f"║ Interés Pagado     : ${interes:>10.0f} ║")
 
         print(Fore.CYAN + "╠══════════════════════════════════╣")
         print(Fore.RED + "║          ESTADO ACTUAL           ║")
         print(Fore.CYAN + "╠══════════════════════════════════╣")
 
-        print(Fore.CYAN   + f"║ Saldo restante     : ${self.saldo:>10.2f} ║")
-        print(Fore.YELLOW + f"║ Interés restante   : ${interes_restante:>10.2f} ║")
+        print(Fore.CYAN   + f"║ Saldo restante     : ${self.saldo:>10.0f} ║")
+        print(Fore.YELLOW + f"║ Interés restante   : ${interes_restante:>10.0f} ║")
 
         print(Fore.CYAN + "╚══════════════════════════════════╝")
 
@@ -267,7 +273,7 @@ class PrestamoColor:
         if porcentaje>100:
             porcentaje=100
 
-        print("\n"+Fore.MAGENTA+f"[{barra}] {porcentaje:.2f}%")
+        print("\n"+Fore.MAGENTA+f"[{barra}] {porcentaje:.0f}%")
 
         # si el prestamo está completamente pagado
         if porcentaje>=99.99:
@@ -282,7 +288,7 @@ class PrestamoColor:
             
             interes = CalculadoraPrestamo.interes_cuota(saldo_temp, self.tasa_mensual)
             capital = CalculadoraPrestamo.dividir_pago(cuota, interes)
-            saldo_temp=int(saldo_temp-capital)
+            saldo_temp = round(saldo_temp - capital, 2)
 
             cursor.execute("""
             INSERT INTO cuotas (prestamo_id,mes,fecha,cuota,interes,capital,saldo,estado)
@@ -310,10 +316,10 @@ class PrestamoColor:
             tabla.append([
                 c['Mes'],
                 c['Fecha'],
-                color_cuota+f"${c['Cuota']:.2f}"+Style.RESET_ALL,
-                Fore.RED+f"${c['Interés']:.2f}"+Style.RESET_ALL,
-                Fore.CYAN+f"${c['Capital']:.2f}"+Style.RESET_ALL,
-                Fore.RED+f"${c['Saldo']:.2f}"+Style.RESET_ALL,
+                color_cuota+f"${c['Cuota']:.0f}"+Style.RESET_ALL,
+                Fore.RED+f"${c['Interés']:.0f}"+Style.RESET_ALL,
+                Fore.CYAN+f"${c['Capital']:.0f}"+Style.RESET_ALL,
+                Fore.RED+f"${c['Saldo']:.0f}"+Style.RESET_ALL,
                 color_estado+estado+Style.RESET_ALL
             ])
 
@@ -517,7 +523,7 @@ def menu_principal():
             for p in prestamos:
                 print(
             Fore.CYAN +
-            f"| {p[0]:<3}| ${p[1]:<12.2f} | ${p[2]:<12.2f}|"
+            f"| {p[0]:<3}| ${p[1]:<12.0f} | ${p[2]:<12.0f}|"
             )
 
             while True:
@@ -635,10 +641,10 @@ def menu_prestamo(prestamo):
                     tabla.append([
                         Fore.MAGENTA + str(c['Mes']) + Style.RESET_ALL,
                         Fore.WHITE + c['Fecha'] + Style.RESET_ALL,
-                        Fore.BLUE + f"${c['Cuota']:.2f}" + Style.RESET_ALL,
-                        Fore.YELLOW + f"${c['Interés']:.2f}" + Style.RESET_ALL,
-                        Fore.CYAN + f"${c['Capital']:.2f}" + Style.RESET_ALL,
-                        Fore.RED + f"${c['Saldo']:.2f}" + Style.RESET_ALL,
+                        Fore.BLUE + f"${c['Cuota']:.0f}" + Style.RESET_ALL,
+                        Fore.YELLOW + f"${c['Interés']:.0f}" + Style.RESET_ALL,
+                        Fore.CYAN + f"${c['Capital']:.0f}" + Style.RESET_ALL,
+                        Fore.RED + f"${c['Saldo']:.0f}" + Style.RESET_ALL,
                         Fore.GREEN + c['Estado'] + Style.RESET_ALL
                     ])
 
