@@ -54,11 +54,11 @@ class CalculadoraPrestamo:
 
     @staticmethod
     def interes_cuota(saldo, tasa):
-        return round(saldo * tasa, 2)
+        return int(saldo * tasa)
 
     @staticmethod
     def dividir_pago(cuota, interes):
-        capital = round(cuota - interes, 2)
+        capital = int(cuota - interes)
         return capital
 
 init(autoreset=True)
@@ -70,8 +70,8 @@ cursor = conn.cursor()
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS prestamos (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    monto_inicial REAL,
-    saldo REAL,
+    monto_inicial INTEGER,
+    saldo INTEGER,
     meses INTEGER,
     tasa REAL,
     fecha_inicio TEXT
@@ -84,23 +84,11 @@ CREATE TABLE IF NOT EXISTS cuotas (
     prestamo_id INTEGER,
     mes INTEGER,
     fecha TEXT,
-    cuota REAL,
-    interes REAL,
-    capital REAL,
-    saldo REAL,
+    cuota INTEGER,
+    interes INTEGER,
+    capital INTEGER,
+    saldo INTEGER,
     estado TEXT DEFAULT 'pendiente'
-)
-""")
-
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS abonos (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    prestamo_id INTEGER,
-    fecha TEXT,
-    monto REAL,
-    interes REAL,
-    capital REAL,
-    saldo_restante REAL
 )
 """)
 
@@ -188,7 +176,7 @@ class PrestamoColor:
         n=self.meses
 
         cuota=P*(r*(1+r)**n)/((1+r)**n-1)
-        return round(cuota,2)
+        return int(cuota)
 
         # ===== RESUMEN FINANCIERO DEL PRÉSTAMO =====
 
@@ -198,7 +186,7 @@ class PrestamoColor:
         total_pagado = cuota * self.meses
         interes_total = total_pagado - self.monto_inicial
 
-        return round(interes_total,2)
+        return int(interes_total)
 
 
     def total_a_pagar(self):
@@ -206,7 +194,7 @@ class PrestamoColor:
         cuota = self.cuota_mensual()
         total = cuota * self.meses
 
-        return round(total,2)
+        return int(total)
     
     def interes_restante(self):
 
@@ -219,7 +207,7 @@ class PrestamoColor:
         if interes_restante < 0:
             interes_restante = 0
 
-        return round(interes_restante,2)
+        return int(interes_restante)
 
 
     def resumen_financiero(self):
@@ -294,7 +282,7 @@ class PrestamoColor:
             
             interes = CalculadoraPrestamo.interes_cuota(saldo_temp, self.tasa_mensual)
             capital = CalculadoraPrestamo.dividir_pago(cuota, interes)
-            saldo_temp=round(saldo_temp-capital,2)
+            saldo_temp=int(saldo_temp-capital)
 
             cursor.execute("""
             INSERT INTO cuotas (prestamo_id,mes,fecha,cuota,interes,capital,saldo,estado)
@@ -306,6 +294,9 @@ class PrestamoColor:
         self.cargar_cuotas()
 
     def mostrar_cuotas(self):
+
+        if not self.cuotas:
+            return False
 
         tabla=[]
 
@@ -328,6 +319,8 @@ class PrestamoColor:
 
         print("\n"+tabulate(tabla,headers=["Mes","Fecha","Cuota","Interés","Capital","Saldo","Estado"],tablefmt="fancy_grid"))
 
+        return True
+
     def pagar_cuota(self,mes):
 
         for c in self.cuotas:
@@ -347,11 +340,6 @@ class PrestamoColor:
                 self.saldo-=capital
 
                 fecha=datetime.today().strftime("%Y-%m-%d")
-
-                cursor.execute("""
-                INSERT INTO abonos (prestamo_id,fecha,monto,interes,capital,saldo_restante)
-                VALUES (?,?,?,?,?,?)
-                """,(self.id,fecha,monto,interes,capital,max(self.saldo,0)))
 
                 cursor.execute(
                     "UPDATE cuotas SET estado='pagada' WHERE id=?",
@@ -380,20 +368,8 @@ class PrestamoColor:
 
                 if c['Estado']=="pagada":
 
-                    cursor.execute("""
-                    SELECT id,capital FROM abonos
-                    WHERE prestamo_id=? AND ABS(capital-?)<0.01
-                    ORDER BY id DESC LIMIT 1
-                    """,(self.id,c['Capital']))
-
-                    pago=cursor.fetchone()
-
-                    if pago:
-                        pago_id,capital=pago
-
-                        cursor.execute("DELETE FROM abonos WHERE id=?",(pago_id,))
-                        self.saldo+=capital
-                        self.actualizar_saldo_db()
+                    self.saldo += c['Capital']
+                    self.actualizar_saldo_db()
 
                     cursor.execute(
                         "UPDATE cuotas SET estado='pendiente' WHERE id=?",
@@ -431,7 +407,6 @@ class PrestamoColor:
             return
 
         cursor.execute("DELETE FROM cuotas WHERE prestamo_id=?", (self.id,))
-        cursor.execute("DELETE FROM abonos WHERE prestamo_id=?", (self.id,))
         cursor.execute("DELETE FROM prestamos WHERE id=?", (self.id,))
 
         conn.commit()
@@ -582,7 +557,7 @@ def menu_principal():
             print(Fore.RED + "╚══════════════════════╝")
             input(Fore.YELLOW + "| Presione Enter para continuar... ")
     
-
+    
 def menu_prestamo(prestamo):
 
     while True:
@@ -642,15 +617,51 @@ def menu_prestamo(prestamo):
                 print(Fore.RED + "╚════════════════════╝")
 
             pausa()
-       
-       # HISTORIAL
+        
+       # HISTORIAL PAGOS
         elif op == "3":
 
             limpiar_pantalla()
 
             print(Fore.CYAN + "╔════════════════════╗")
-            print(Fore.CYAN + "║ HISTORIAL DE CUOTAS ║")
+            print(Fore.CYAN + "║ HISTORIAL DE PAGOS ║")
             print(Fore.CYAN + "╚════════════════════╝")
+
+            tabla=[]
+
+            for c in prestamo.cuotas:
+
+                if c['Estado']=='pagada':
+                    tabla.append([
+                        Fore.MAGENTA + str(c['Mes']) + Style.RESET_ALL,
+                        Fore.WHITE + c['Fecha'] + Style.RESET_ALL,
+                        Fore.BLUE + f"${c['Cuota']:.2f}" + Style.RESET_ALL,
+                        Fore.YELLOW + f"${c['Interés']:.2f}" + Style.RESET_ALL,
+                        Fore.CYAN + f"${c['Capital']:.2f}" + Style.RESET_ALL,
+                        Fore.RED + f"${c['Saldo']:.2f}" + Style.RESET_ALL,
+                        Fore.GREEN + c['Estado'] + Style.RESET_ALL
+                    ])
+
+            if not tabla:
+                print(Fore.RED + "╔════════════════════════════════╗")
+                print(Fore.YELLOW + "║ No se han registrado pagos aún ║")
+                print(Fore.RED + "╚════════════════════════════════╝")
+            else:
+                print(Fore.GREEN + tabulate(
+                    tabla,
+                    headers=[
+                        Fore.MAGENTA+"Mes"+Style.RESET_ALL,
+                        Fore.WHITE+"Fecha"+Style.RESET_ALL,
+                        Fore.BLUE+"Cuota"+Style.RESET_ALL,
+                        Fore.YELLOW+"Interés"+Style.RESET_ALL,
+                        Fore.CYAN+"Capital"+Style.RESET_ALL,
+                        Fore.RED+"Saldo"+Style.RESET_ALL,
+                        Fore.GREEN+"Estado"+Style.RESET_ALL
+                    ],
+                    tablefmt="fancy_grid"
+                ))
+
+            pausa()
         
         # CAMBIAR ESTADO CUOTA
         elif op == "4":

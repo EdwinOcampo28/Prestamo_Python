@@ -78,15 +78,6 @@ init(autoreset=True)
 conn = sqlite3.connect("prestamos.db")
 cursor = conn.cursor()
 
-# Crear columna tipo si no existe
-try:
-    cursor.execute("ALTER TABLE abonos ADD COLUMN tipo TEXT")
-    conn.commit()
-except:
-    pass
-cursor.execute("UPDATE abonos SET tipo='ABONO' WHERE tipo IS NULL")
-conn.commit()
-
 # Activar claves foráneas (mejor integridad)
 cursor.execute("PRAGMA foreign_keys = ON")
 
@@ -294,27 +285,27 @@ class PrestamoColor:
 
     def cargar_abonos(self):
 
-        cursor.execute("""
-        SELECT id, fecha, monto, interes, capital, saldo_restante, tipo
-        FROM abonos
-        WHERE prestamo_id = ?
-        ORDER BY fecha
-        """, (self.id,))
+        cursor.execute(
+            """
+            SELECT id,fecha,monto,interes,capital,saldo_restante
+            FROM abonos
+            WHERE prestamo_id=?
+            ORDER BY id
+            """,
+            (self.id,)
+        )
 
-        datos = cursor.fetchall()
-
-        self.abonos = []
-
-        for d in datos:
-            self.abonos.append({
-                "id": d[0],
-                "Fecha": d[1],
-                "Monto": d[2],
-                "Interés": d[3],
-                "Capital": d[4],
-                "Saldo": d[5],
-                "tipo": d[6]
-            })
+        self.abonos = [
+            {
+                'id': i,
+                'Fecha': f,
+                'Monto': m,
+                'Interés': inte,
+                'Capital': c,
+                'Saldo': s
+            }
+            for i, f, m, inte, c, s in cursor.fetchall()
+        ]
 
     # ===== CUOTA MENSUAL =====
 
@@ -520,16 +511,16 @@ class PrestamoColor:
                 fecha = datetime.today().strftime("%Y-%m-%d")
 
                 cursor.execute("""
-                INSERT INTO abonos (prestamo_id,fecha,monto,interes,capital,saldo_restante,tipo)
-                VALUES (?,?,?,?,?,?,?)
-                """, (
+                INSERT INTO abonos
+                (prestamo_id,fecha,monto,interes,capital,saldo_restante)
+                VALUES (?,?,?,?,?,?)
+                """,(
                     self.id,
                     fecha,
                     monto,
                     interes,
                     capital,
-                    self.saldo,
-                    "CUOTA"
+                    max(self.saldo,0)
                 ))
 
                 cursor.execute(
@@ -636,16 +627,15 @@ class PrestamoColor:
             fecha = datetime.today().strftime("%Y-%m-%d")
 
             cursor.execute("""
-            INSERT INTO abonos (prestamo_id,fecha,monto,interes,capital,saldo_restante,tipo)
-            VALUES (?,?,?,?,?,?,?)
+            INSERT INTO abonos (prestamo_id,fecha,monto,interes,capital,saldo_restante)
+            VALUES (?,?,?,?,?,?)
             """, (
                 self.id,
                 fecha,
                 monto,
                 interes_pagado,
                 capital,
-                self.saldo,
-                "ABONO"
+                self.saldo
             ))
 
             self.actualizar_saldo_db()
@@ -690,26 +680,33 @@ class PrestamoColor:
     def mostrar_abonos(self):
 
         if not self.abonos:
+            print(Fore.YELLOW + "⚠ No hay abonos registrados")
             return False
 
         tabla = []
 
         for a in self.abonos:
 
-            if a["tipo"] == "CUOTA":
-                tipo = Fore.BLUE + "CUOTA" + Style.RESET_ALL
-                interes = a["Interés"]
-                capital = a["Capital"]
+            tipo_pago = "ABONO"
 
+            for c in self.cuotas:
+                if abs(a['Monto'] - c['Cuota']) < 0.01 and abs(a['Interés'] - c['Interés']) < 0.01:
+                    tipo_pago = "CUOTA"
+                    break
+
+            if tipo_pago == "CUOTA":
+                tipo = Fore.BLUE + "CUOTA" + Style.RESET_ALL
+                interes = a['Interés']
+                capital = a['Capital']
             else:
                 tipo = Fore.GREEN + "ABONO" + Style.RESET_ALL
                 interes = 0
-                capital = a["Monto"]
+                capital = a['Monto']
 
             tabla.append([
-                a["id"],
+                a['id'],
                 tipo,
-                a["Fecha"],
+                a['Fecha'],
                 Fore.BLUE + f"${a['Monto']:.2f}" + Style.RESET_ALL,
                 Fore.YELLOW + f"${interes:.2f}" + Style.RESET_ALL,
                 Fore.CYAN + f"${capital:.2f}" + Style.RESET_ALL,
