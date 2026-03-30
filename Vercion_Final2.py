@@ -522,8 +522,8 @@ def menu_principal():
 
             for p in prestamos:
                 print(
-            Fore.CYAN +
-            f"| {p[0]:<3}| ${p[1]:<12.0f} | ${p[2]:<12.0f}|"
+                Fore.CYAN +
+                f"| {p[0]:<3}| ${int(p[1]):<12} | ${int(p[2]):<12}|"
             )
 
             while True:
