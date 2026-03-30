@@ -299,33 +299,33 @@ class PrestamoColor:
         conn.commit()
         self.cargar_cuotas()
 
-    def mostrar_cuotas(self):
 
+    def mostrar_cuotas(self):
         if not self.cuotas:
             return False
 
-        tabla=[]
+        tabla = []
 
         for c in self.cuotas:
+            estado = c['Estado']
 
-            estado=c['Estado']
-
-            color_estado=Fore.GREEN if estado=='pagada' else Fore.RED
-            color_cuota=Fore.BLUE if estado=='pendiente' else Fore.GREEN
-
+            # Colores llamativos
+            color_estado = Fore.GREEN if estado == 'pagada' else Fore.RED
+            color_cuota = Fore.GREEN 
+            color_interes = Fore.YELLOW 
+            color_capital = Fore.CYAN 
+            color_saldo = Fore.RED
             tabla.append([
-                c['Mes'],
-                c['Fecha'],
-                color_cuota+f"${c['Cuota']:.0f}"+Style.RESET_ALL,
-                Fore.RED+f"${c['Interés']:.0f}"+Style.RESET_ALL,
-                Fore.CYAN+f"${c['Capital']:.0f}"+Style.RESET_ALL,
-                Fore.RED+f"${c['Saldo']:.0f}"+Style.RESET_ALL,
-                color_estado+estado+Style.RESET_ALL
+                Fore.MAGENTA + str(c['Mes']) + Style.RESET_ALL,
+                Fore.LIGHTBLACK_EX + str(c['Fecha']) + Style.RESET_ALL,
+                color_cuota + f"${c['Cuota']:.0f}" + Style.RESET_ALL,
+                color_interes + f"${c['Interés']:.0f}" + Style.RESET_ALL,
+                color_capital + f"${c['Capital']:.0f}" + Style.RESET_ALL,
+                color_saldo + f"${c['Saldo']:.0f}" + Style.RESET_ALL,
+                color_estado + estado + Style.RESET_ALL
             ])
 
-        print("\n"+tabulate(tabla,headers=["Mes","Fecha","Cuota","Interés","Capital","Saldo","Estado"],tablefmt="fancy_grid"))
-
-        return True
+        print("\n" + tabulate(tabla, headers=["Mes", "Fecha", "Cuota", "Interés", "Capital", "Saldo", "Estado"], tablefmt="fancy_grid"))
 
     def pagar_cuota(self,mes):
 
@@ -387,7 +387,8 @@ class PrestamoColor:
                     self.cargar_cuotas()
 
                     print(Fore.CYAN + "╔════════════════════════════════╗")
-                    print(Fore.YELLOW+f"║ ✔ Cuota {mes} cambiada a pendiente ║")
+                    print(Fore.RED+f"║ ✔ Cuota {mes} cambiada a pendiente ║")
+                    print(Fore.GREEN + f"║ 💰 Saldo restaurado: ${self.saldo:.0f}  ║")
                     print(Fore.CYAN + "╚════════════════════════════════╝")
                     
                 else:
@@ -533,16 +534,16 @@ def menu_principal():
                     break
                 except ValueError:
                     print(Fore.RED + "╔═══════════════════════════════════╗")
-                    print(Fore.RED + "║     ❌ Debe ingresar un número    ║")
+                    print(Fore.RED + "║ ❌ Debe ingresar un número Valido ║")
                     print(Fore.RED + "╚═══════════════════════════════════╝")
 
             cursor.execute("SELECT id FROM prestamos WHERE id=?", (pid,))
             existe = cursor.fetchone()
 
             if not existe:
-                print(Fore.RED + "╔═══════════════════════════╗")
-                print(Fore.RED + "║ ❌ Ese préstamo no existe ║")
-                print(Fore.RED + "╚═══════════════════════════╝")
+                print(Fore.RED + "╔═════════════════════════════════╗")
+                print(Fore.RED + "║El Número de préstamo no existe ║")
+                print(Fore.RED + "╚═════════════════════════════════╝")
                 input(Fore.YELLOW + "| Presione Enter para continuar... ")
                 continue
 
