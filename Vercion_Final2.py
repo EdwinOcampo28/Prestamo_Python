@@ -360,9 +360,9 @@ class PrestamoColor:
                 print(Fore.MAGENTA+"╚════════════════════════════════╝")
                 return
 
-        print(Fore.MAGENTA+"╔══════════════════════╗")
-        print(Fore.RED+"║ ❌ Mes no encontrado ║")
-        print(Fore.MAGENTA+"╚══════════════════════╝")
+        print(Fore.MAGENTA+"╔═══════════════════════════╗")
+        print(Fore.RED+f"║ ❌ cuota {mes} no encontrada ║")
+        print(Fore.MAGENTA+"╚═══════════════════════════╝")
 
     def cambiar_estado_cuota(self,mes):
 
@@ -384,10 +384,10 @@ class PrestamoColor:
 
                     self.cargar_cuotas()
 
-                    print(Fore.CYAN + "╔════════════════════════════════╗")
+                    print(Fore.CYAN + "╔═════════════════════════════════╗")
                     print(Fore.RED+f"║ ✔ Cuota {mes} cambiada a pendiente ║")
                     print(Fore.GREEN + f"║  💰 Saldo restaurado: ${self.saldo:.0f}  ║")
-                    print(Fore.CYAN + "╚════════════════════════════════╝")
+                    print(Fore.CYAN + "╚═════════════════════════════════╝")
                     
                 else:
                     print(Fore.CYAN + "╔══════════════════════════════════════════╗")
@@ -570,37 +570,25 @@ def menu_prestamo(prestamo):
 
         print(Fore.CYAN + "\n╔═══════════════════════════╗")
         print(Fore.CYAN + "║        MENÚ PRÉSTAMO      ║")
-        print(Fore.CYAN + "╠════╦══════════════════════╣")
-        print(Fore.GREEN + "║ 1  ║ Ver cuotas           ║")
+        print(Fore.CYAN + "╚═══════════════════════════╝")
+        print(Fore.GREEN + "║ 1  ║ Pagar cuota          ║")
         print(Fore.CYAN + "╠════╬══════════════════════╣")
-        print(Fore.GREEN + "║ 2  ║ Pagar cuota          ║")
+        print(Fore.GREEN + "║ 2  ║ Historial pagos      ║")
         print(Fore.CYAN + "╠════╬══════════════════════╣")
-        print(Fore.GREEN + "║ 3  ║ Historial pagos      ║")
+        print(Fore.GREEN + "║ 3  ║ Cambiar estado cuota ║")
         print(Fore.CYAN + "╠════╬══════════════════════╣")
-        print(Fore.GREEN + "║ 4  ║ Cambiar estado cuota ║")
+        print(Fore.GREEN + "║ 4  ║ Resumen financiero   ║")
         print(Fore.CYAN + "╠════╬══════════════════════╣")
-        print(Fore.GREEN + "║ 5  ║ Resumen financiero   ║")
+        print(Fore.GREEN + "║ 5  ║ Eliminar préstamo    ║")
         print(Fore.CYAN + "╠════╬══════════════════════╣")
-        print(Fore.GREEN + "║ 6  ║ Eliminar préstamo    ║")
-        print(Fore.CYAN + "╠════╬══════════════════════╣")
-        print(Fore.GREEN + "║ 7  ║ Volver               ║")
+        print(Fore.GREEN + "║ 6  ║ Volver               ║")
         print(Fore.CYAN + "╚════╩══════════════════════╝")
 
         op = input(Fore.YELLOW + "║ Seleccione una opción: ")
 
-        # VER CUOTAS
+        
+        # PAGAR CUOTA
         if op == "1":
-
-            limpiar_pantalla()
-
-            print(Fore.CYAN + "╔════════════╗")
-            print(Fore.CYAN + "║ VER CUOTAS ║")
-            print(Fore.CYAN + "╚════════════╝")
-            prestamo.mostrar_cuotas()
-
-            pausa()
-       # PAGAR CUOTA
-        elif op == "2":
 
             limpiar_pantalla()
 
@@ -622,8 +610,8 @@ def menu_prestamo(prestamo):
 
             pausa()
         
-       # HISTORIAL PAGOS
-        elif op == "3":
+        # HISTORIAL PAGOS
+        elif op == "2":
 
             limpiar_pantalla()
 
@@ -668,7 +656,7 @@ def menu_prestamo(prestamo):
             pausa()
         
         # CAMBIAR ESTADO CUOTA
-        elif op == "4":
+        elif op == "3":
 
             limpiar_pantalla()
 
@@ -686,9 +674,9 @@ def menu_prestamo(prestamo):
 
                 # 🔄 MOSTRAR TABLA ACTUALIZADA
                 print()
-                print(Fore.CYAN + "╔═══════════════════════╗")
-                print(Fore.CYAN + "║  CUOTAS ACTUALIZADAS  ║")
-                print(Fore.CYAN + "╚═══════════════════════╝")
+                print(Fore.CYAN + "╔═════════════════════╗")
+                print(Fore.CYAN + "║ CUOTAS ACTUALIZADAS ║")
+                print(Fore.CYAN + "╚═════════════════════╝")
 
                 prestamo.mostrar_cuotas()
 
@@ -701,7 +689,7 @@ def menu_prestamo(prestamo):
             pausa()
 
        # RESUMEN FINANCIERO
-        elif op == "5":
+        elif op == "4":
 
             limpiar_pantalla()
 
@@ -714,7 +702,7 @@ def menu_prestamo(prestamo):
             pausa()
 
         # ELIMINAR PRESTAMO
-        elif op == "6":
+        elif op == "5":
 
             limpiar_pantalla()
 
@@ -745,7 +733,7 @@ def menu_prestamo(prestamo):
                 pausa()
 
         # VOLVER
-        elif op == "7":
+        elif op == "6":
 
             limpiar_pantalla()
 
